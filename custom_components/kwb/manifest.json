@@ -1,11 +1,15 @@
 {
   "domain": "kwb",
   "name": "KWB",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/kwb",
+  "version": "0.0.1",
+  "codeowners": [
+    "alangibson"
+  ],
+  "documentation": "",
   "iot_class": "local_polling",
   "loggers": ["pykwb"],
   "requirements": [
     "git+https://github.com/alangibson/pykwb.git@more-registers#pykwb==0.1.0"
-  ]
+  ],
+  "config_flow": true
 }
