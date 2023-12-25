@@ -1,6 +1,6 @@
 {
-  "domain": "kwb",
-  "name": "KWB",
+  "domain": "kwb_heaters",
+  "name": "KWB Heaters",
   "version": "0.0.1",
   "codeowners": [
     "alangibson"

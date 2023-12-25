@@ -3,7 +3,6 @@
 
 import logging
 
-# from .SunGather.heater import Sungrowheater
 from pykwb.kwb import KWBMessageStreamLogkwb, TCPByteReader, load_signal_maps
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TIMEOUT, CONF_UNIQUE_ID

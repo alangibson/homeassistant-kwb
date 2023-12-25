@@ -2,9 +2,9 @@
 
 from datetime import timedelta
 
-DOMAIN = "kwb"
+DOMAIN = "kwb_heaters"
 
-DEFAULT_NAME = "KWB"
+DEFAULT_NAME = "KWB Heaters"
 DEFAULT_PORT = 502
 DEFAULT_SLAVE = 0x01
 DEFAULT_SCAN_INTERVAL = 60

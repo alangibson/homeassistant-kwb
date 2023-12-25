@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pykwb.kwb import load_signal_maps
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -36,8 +35,10 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.config_entries import ConfigEntry
 
+from pykwb.kwb import load_signal_maps
 from .const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 from .heater import connect_heater, data_updater
+
 
 logger = logging.getLogger(__name__)
 
