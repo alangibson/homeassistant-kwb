@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Heater is already configured"
+        },
+        "error": {
+            "cannot_connect": "Cannot connect to heater",
+            "unknown": "Unknown error. Sorry about that."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "unique_id": "Name of heater",
+                    "host": "Hostname or IP address",
+                    "port": "Port",
+                    "timeout": "Connection timeout",
+                    "connection": "Connection type",
+                    "model": "Heater model",
+                    "sender": "Control model",
+                    "protocol": "Communication protocol"
+                }
+            }
+        }
+   },
+  "selector": {
+    "model": {
+      "options": {
+        "easyfire_1": "EasyFire 1",
+        "unknown": "All other models"
+      }
+    },
+    "sender": {
+      "options": {
+        "comfort_3": "Comfort 3",
+        "unknown": "All other models"
+      }
+    }
+
+  },
+  "entity": {
+    "sensor": {
+      "ash_can_ok": {
+        "_name": "[%key:component::sensor::entity_component::temperature::name%]",
+        "name": "BUTTS"
+      }
+    }
+  }
+}
