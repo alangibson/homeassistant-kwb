@@ -17,7 +17,10 @@
                     "connection": "Connection type",
                     "model": "Heater model",
                     "sender": "Control model",
-                    "protocol": "Communication protocol"
+                    "protocol": "Communication protocol",
+                    "boiler_efficiency": "Boiler Efficiency [%]",
+                    "boiler_nominal_power_kW": "Boiler Nominal Power [kW]",
+                    "pellet_nominal_energy_kWh_kg": "Pellet Nominal Energy [kWh/kg]"
                 }
             }
         }

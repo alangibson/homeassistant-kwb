@@ -32,6 +32,7 @@ class KWBHeater:
             'boiler_efficiency': config.get(CONF_BOILER_EFFICIENCY),
             'boiler_nominal_power_kW': config.get(CONF_BOILER_NOMINAL_POWER)
         }
+        logger.error("heater_config=%s" % heater_config )
         self.message_stream = KWBMessageStream(reader=reader, signal_maps=signal_maps, heater_config=heater_config)
         # FIXME remove hard coded ids
         self.message_ids = [32, 33, 64, 65]
@@ -76,6 +77,7 @@ def create_heater(config_heater: dict) -> tuple[bool, KWBHeater | Exception]:
             heater = KWBHeater(config_heater, signal_maps)
             is_success = heater.scrape()
         except Exception as e:
+            logger.error("Error connecting to heater: %s" % e)
             return False, e
         return is_success, heater
 

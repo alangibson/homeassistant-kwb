@@ -60,7 +60,7 @@ DATA_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=8899): int,
-        vol.Required(CONF_TIMEOUT, default=2): int,      
+        vol.Required(CONF_TIMEOUT, default=2): int,
         vol.Optional(CONF_BOILER_EFFICIENCY): float,
         vol.Optional(CONF_BOILER_NOMINAL_POWER): float,
         vol.Optional(CONF_PELLET_NOMINAL_ENERGY): float,
@@ -80,8 +80,6 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
 
-        logger.debug(f"validate_input config={pformat(user_input)}")
-
         # Accumulate validation errors. Key is name of field from DATA_SCHEMA
         errors = {}
 
@@ -97,8 +95,6 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
         # If we can't connect, set a value indicating this so we can tell the user
         if not is_success:
             errors["base"] = "cannot_connect"
-
-        logger.debug(f"validate_input errors={pformat(errors)}")
 
         return (errors, heater)
 
