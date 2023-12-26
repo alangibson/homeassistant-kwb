@@ -36,7 +36,7 @@ class KWBHeater:
         self.message_stream = KWBMessageStream(reader=reader, signal_maps=signal_maps, heater_config=heater_config)
         # FIXME remove hard coded ids
         self.message_ids = [32, 33, 64, 65]
-        self.read_timeout = config.get(CONF_TIMEOUT)
+        self.read_timeout = config.get(CONF_TIMEOUT, 2)
         # TODO support serial too
         # if args.mode == PROP_MODE_TCP:
         #     reader = TCPByteReader(ip=args.hostname, port=args.port)
