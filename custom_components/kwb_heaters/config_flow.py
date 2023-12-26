@@ -8,7 +8,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    OptionsFlow,
+    ConfigEntry,
+    FlowResult
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -22,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import selector
 
 from .const import (
-    DEFAULT_NAME, 
+    DEFAULT_NAME,
     DOMAIN,
     CONF_PELLET_NOMINAL_ENERGY,
     CONF_BOILER_EFFICIENCY,
@@ -133,3 +138,34 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(
                     step_id="user", data_schema=DATA_SCHEMA, errors=errors
                 )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return KWBOptionsFlow(config_entry)
+
+
+class KWBOptionsFlow(OptionsFlow, domain=DOMAIN):
+    
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Manage the options."""
+
+        if user_input is not None:
+            return self.async_create_entry(title="KWB configuration", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "show_things",
+                        default=self.config_entry.options.get("show_things"),
+                    ): bool
+                }
+            ),
+        )

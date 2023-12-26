@@ -71,7 +71,7 @@ ETHERNET_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_TYPE): "tcp",
+        vol.Required(CONF_TYPE): "tcp"
     }
 )
 
@@ -211,6 +211,75 @@ def sensor_descriptions(unique_device_id, model):
                     device_model=model,
                 )
 
+    yield KWBSensorEntityDescription(
+        key='boiler_on',
+        translation_key='boiler_on',
+        name='Boiler On',
+        device_class=device_class,
+        state_class=state_class,
+        device_id=unique_device_id,
+        device_model=model,
+    )
+    yield KWBSensorEntityDescription(
+        key='boiler_nominal_power',
+        translation_key='boiler_nominal_power',
+        name='Boiler Nominal Power',
+        native_unit_of_measurement='kw',
+        device_class='power',
+        state_class=state_class,
+        device_id=unique_device_id,
+        device_model=model,
+    )
+    yield KWBSensorEntityDescription(
+        key='boiler_run_time',
+        translation_key='boiler_run_time',
+        name='Boiler Run Time',
+        native_unit_of_measurement='sec',
+        device_class='duration',
+        state_class=state_class,
+        device_id=unique_device_id,
+        device_model=model,
+    )
+    yield KWBSensorEntityDescription(
+        key='energy_output',
+        translation_key='energy_output',
+        name='Energy Output',
+        native_unit_of_measurement='kwH',
+        device_class='power',
+        state_class=state_class,
+        device_id=unique_device_id,
+        device_model=model,
+    )
+    yield KWBSensorEntityDescription(
+        key='pellet_consumption',
+        translation_key='pellet_consumption',
+        name='Pellet Consumption',
+        native_unit_of_measurement='kg',
+        device_class='weight',
+        state_class=state_class,
+        device_id=unique_device_id,
+        device_model=model,
+    )
+    yield KWBSensorEntityDescription(
+        key='pellet_consumption',
+        translation_key='pellet_consumption',
+        name='Pellet Consumption',
+        native_unit_of_measurement='kg',
+        device_class='weight',
+        state_class=state_class,
+        device_id=unique_device_id,
+        device_model=model,
+    )
+    yield KWBSensorEntityDescription(
+        key='last_timestamp',
+        translation_key='last_timestamp',
+        name='Last Timestamp',
+        native_unit_of_measurement='msec',
+        device_class='duration',
+        state_class=state_class,
+        device_id=unique_device_id,
+        device_model=model,
+    )
 
 # Called automagically by Home Assistant
 async def async_setup_entry(
@@ -297,4 +366,5 @@ async def async_setup_entry(
         description.device_model = config_entry.data.get(CONF_MODEL)
         # Build sensor name
         entities.append(KWBSensorEntity(coordinator, description))
+
     async_add_entities(entities, update_before_add=True)
