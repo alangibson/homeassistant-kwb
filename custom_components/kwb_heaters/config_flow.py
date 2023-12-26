@@ -23,7 +23,10 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_UNIQUE_ID,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import (
+    HomeAssistant,
+    callback
+)
 from homeassistant.helpers.selector import selector
 
 from .const import (
