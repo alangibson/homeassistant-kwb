@@ -48,7 +48,7 @@ class KWBHeater:
 
     def scrape(self):
         self.message_stream.open()
-
+        
         # TODO use read_data(), not read_messages()
         # message_generator = self.message_stream.read_messages(
         #     self.message_ids, self.read_timeout

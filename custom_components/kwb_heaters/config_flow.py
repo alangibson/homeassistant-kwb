@@ -83,7 +83,6 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
 
         print(user_input)
         logger.error(pformat(user_input))
-       
         pprint(user_input)
 
         # Accumulate validation errors. Key is name of field from DATA_SCHEMA

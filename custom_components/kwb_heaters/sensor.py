@@ -229,7 +229,7 @@ async def async_setup_entry(
         CONF_UNIQUE_ID: config_entry.data.get(CONF_UNIQUE_ID),
         CONF_HOST: config_entry.data.get(CONF_HOST),
         CONF_PORT: config_entry.data.get(CONF_PORT),
-        CONF_TIMEOUT: int(config_entry.data.get(CONF_TIMEOUT)),
+        CONF_TIMEOUT: int(config_entry.data.get(CONF_TIMEOUT, 2)),
         CONF_MODEL: config_entry.data.get(CONF_MODEL),
         CONF_PROTOCOL: config_entry.data.get(CONF_PROTOCOL),
         CONF_BOILER_EFFICIENCY: config_entry.data.get(CONF_BOILER_EFFICIENCY),
