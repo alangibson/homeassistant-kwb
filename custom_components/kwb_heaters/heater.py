@@ -3,10 +3,21 @@
 
 import logging
 
-from pykwb.kwb import KWBMessageStreamLogkwb, TCPByteReader, load_signal_maps
+from pykwb.kwb import KWBMessageStream, TCPByteReader, load_signal_maps
 
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TIMEOUT, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_HOST, 
+    CONF_PORT, 
+    CONF_TIMEOUT, 
+    CONF_UNIQUE_ID
+)
 from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from .const import (
+    CONF_PELLET_NOMINAL_ENERGY,
+    CONF_BOILER_EFFICIENCY,
+    CONF_BOILER_NOMINAL_POWER
+)
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +27,12 @@ class KWBHeater:
         reader = TCPByteReader(ip=config.get(CONF_HOST), port=config.get(CONF_PORT))
         self.unique_id = config.get(CONF_UNIQUE_ID)
         self.unique_key = config.get(CONF_UNIQUE_ID).lower().replace(" ", "_")
-        self.message_stream = KWBMessageStreamLogkwb(reader, signal_maps)
+        heater_config = {
+            'pellet_nominal_energy_kWh_kg': config.get(CONF_PELLET_NOMINAL_ENERGY),
+            'boiler_efficiency': config.get(CONF_BOILER_EFFICIENCY),
+            'boiler_nominal_power_kW': config.get(CONF_BOILER_NOMINAL_POWER)
+        }
+        self.message_stream = KWBMessageStream(reader=reader, signal_maps=signal_maps, heater_config=heater_config)
         # FIXME remove hard coded ids
         self.message_ids = [32, 33, 64, 65]
         self.read_timeout = config.get(CONF_TIMEOUT)
@@ -31,17 +47,22 @@ class KWBHeater:
 
     def scrape(self):
         self.message_stream.open()
-        message_generator = self.message_stream.read_messages(
-            self.message_ids, self.read_timeout
-        )
-        for message in message_generator:
-            data = message.decode()
-            # Put data in latest_scrape
-            for sensor_name, sensor_data in data.items():
-                # Prepend unique id to sensor name
-                sensor_value = sensor_data[0]
-                sensor_definition = sensor_data[1]
-                self.latest_scrape[sensor_name] = sensor_value
+
+        # TODO use read_data(), not read_messages()
+        # message_generator = self.message_stream.read_messages(
+        #     self.message_ids, self.read_timeout
+        # )
+        # for message in message_generator:
+        #     data = message.decode()
+        #     # Put data in latest_scrape
+        #     for sensor_name, sensor_data in data.items():
+        #         # Prepend unique id to sensor name
+        #         sensor_value = sensor_data[0]
+        #         sensor_definition = sensor_data[1]
+        #         self.latest_scrape[sensor_name] = sensor_value
+
+        data = self.message_stream.read_data_once(self.message_ids, self.read_timeout)
+        self.latest_scrape.update(data)
 
         self.message_stream.close()
 

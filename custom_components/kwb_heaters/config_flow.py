@@ -21,10 +21,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import selector
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import (
+    DEFAULT_NAME, 
+    DOMAIN,
+    CONF_PELLET_NOMINAL_ENERGY,
+    CONF_BOILER_EFFICIENCY,
+    CONF_BOILER_NOMINAL_POWER
+)
 from .heater import connect_heater
 
 logger = logging.getLogger(__name__)
+
 
 # This is the schema that used to display the UI to the user.
 DATA_SCHEMA = vol.Schema(
@@ -53,7 +60,10 @@ DATA_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=8899): int,
-        vol.Required(CONF_TIMEOUT, default=2): int,
+        vol.Required(CONF_TIMEOUT, default=2): int,      
+        vol.Optional(CONF_BOILER_EFFICIENCY): float,
+        vol.Optional(CONF_BOILER_NOMINAL_POWER): float,
+        vol.Optional(CONF_PELLET_NOMINAL_ENERGY): float,
     }
 )
 

@@ -36,7 +36,13 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 
 from pykwb.kwb import load_signal_maps
-from .const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    DOMAIN, 
+    MIN_TIME_BETWEEN_UPDATES,
+    CONF_PELLET_NOMINAL_ENERGY,
+    CONF_BOILER_EFFICIENCY,
+    CONF_BOILER_NOMINAL_POWER
+)
 from .heater import connect_heater, data_updater
 
 
@@ -217,8 +223,6 @@ async def async_setup_entry(
         # unique_device_id = config_entry.entry_id
         raise Exception("Unique device id is None. This should not be possible.")
 
-    unique_device_key = unique_device_id.lower().replace(" ", "_")
-
     # Setup sensors from a config entry created in the integrations UI
     # Configure KWB heater
     config_heater = {
@@ -228,7 +232,18 @@ async def async_setup_entry(
         CONF_TIMEOUT: int(config_entry.data.get(CONF_TIMEOUT)),
         CONF_MODEL: config_entry.data.get(CONF_MODEL),
         CONF_PROTOCOL: config_entry.data.get(CONF_PROTOCOL),
+        CONF_BOILER_EFFICIENCY: config_entry.data.get(CONF_BOILER_EFFICIENCY),
+        CONF_BOILER_NOMINAL_POWER: config_entry.data.get(CONF_BOILER_NOMINAL_POWER),
+        CONF_PELLET_NOMINAL_ENERGY: config_entry.data.get(CONF_PELLET_NOMINAL_ENERGY),
     }
+
+    # HACK remove hardcoded sensor names
+    # TODO we need to somehow recover the last boiler_run_time, energy_output and pellet_consumption sensor values
+    # They should be fed to the KWBHeater constructor (?)
+    last_boiler_run_time = float(hass.states.get('sensor.easyfire_1_kwb_boiler_run_time').state)
+    last_energy_output = float(hass.states.get('sensor.easyfire_1_kwb_energy_output').state)
+    last_pellet_consumption = float(hass.states.get('sensor.easyfire_1_kwb_pellet_consumption').state)
+    last_timestamp = float(hass.states.get('sensor.easyfire_1_kwb_last_timestamp').state)
 
     # Async construct inverter object
     # Make sure we can connect to the inverter
@@ -258,7 +273,6 @@ async def async_setup_entry(
     await coordinator.async_refresh()
 
     # Register our inverter device
-    print("!!!!!!!! registering device")
     device_registry.async_get(hass).async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, unique_device_id)},

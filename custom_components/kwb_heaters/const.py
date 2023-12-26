@@ -11,3 +11,7 @@ DEFAULT_SCAN_INTERVAL = 60
 DEFAULT_TIMEOUT = 3
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+
+CONF_PELLET_NOMINAL_ENERGY = 'pellet_nominal_energy_kWh_kg'
+CONF_BOILER_EFFICIENCY = 'boiler_efficiency'
+CONF_BOILER_NOMINAL_POWER = 'boiler_nominal_power_kW'
