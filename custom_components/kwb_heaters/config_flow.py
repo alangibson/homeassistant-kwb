@@ -79,13 +79,18 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate that the user input allows us to connect to the heater.
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
+        from pprint import pprint, pformat
+
+        print(user_input)
+        logger.error(pformat(user_input))
+       
+        pprint(user_input)
 
         # Accumulate validation errors. Key is name of field from DATA_SCHEMA
         errors = {}
 
         # Don't do anything if we don't have a configuration
         if not user_input:
-            logger.debug("validate_input returning None due to no config")
             return None
 
         # Validate the data can be used to set up a connection.
