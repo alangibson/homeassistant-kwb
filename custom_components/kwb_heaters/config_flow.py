@@ -149,7 +149,7 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
         return KWBOptionsFlow(config_entry)
 
 
-class KWBOptionsFlow(OptionsFlow, domain=DOMAIN):
+class KWBOptionsFlow(OptionsFlow):
     
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
