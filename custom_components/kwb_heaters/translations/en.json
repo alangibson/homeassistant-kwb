@@ -20,7 +20,11 @@
           "protocol": "Communication protocol",
           "boiler_efficiency": "Boiler Efficiency [%]",
           "boiler_nominal_power_kW": "Boiler Nominal Power [kW]",
-          "pellet_nominal_energy_kWh_kg": "Pellet Nominal Energy [kWh/kg]"
+          "pellet_nominal_energy_kWh_kg": "Pellet Nominal Energy [kWh/kg]",
+          "last_boiler_run_time": "Last Boiler Run Time [sec]",
+          "last_energy_output": "Last Energy Output [kWh]",
+          "last_pellet_consumption": "Last Ppellet Consumption [kg]",
+          "last_timestamp": "Last Timestamp [msec]"
         }
       }
     }
@@ -43,7 +47,11 @@
           "protocol": "Communication protocol",
           "boiler_efficiency": "Boiler Efficiency [%]",
           "boiler_nominal_power_kW": "Boiler Nominal Power [kW]",
-          "pellet_nominal_energy_kWh_kg": "Pellet Nominal Energy [kWh/kg]"
+          "pellet_nominal_energy_kWh_kg": "Pellet Nominal Energy [kWh/kg]",
+          "last_boiler_run_time": "Last Boiler Run Time [sec]",
+          "last_energy_output": "Last Energy Output [kWh]",
+          "last_pellet_consumption": "Last Ppellet Consumption [kg]",
+          "last_timestamp": "Last Timestamp [msec]"
         },
         "description": "Change KWB Heater settings"
       }

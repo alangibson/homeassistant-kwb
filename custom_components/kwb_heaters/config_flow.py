@@ -194,10 +194,11 @@ class KWBOptionsFlow(OptionsFlow):
         logger.error(conf_boiler_efficiency, conf_boiler_nominal_power, conf_pellet_nominal_energy)
 
         # Load up existing sensor values
-        sensor_boiler_run_time = self.hass.states.get('sensor.easyfire_1_kwb_boiler_run_time')
-        sensor_energy_output = self.hass.states.get('sensor.easyfire_1_kwb_energy_output')
-        sensor_pellet_consumption = self.hass.states.get('sensor.easyfire_1_kwb_pellet_consumption')
-        sensor_last_timestamp = self.hass.states.get('sensor.easyfire_1_kwb_last_timestamp')
+        # FIXME these sensors need to be prefixed with {model}_{unique_id}_
+        sensor_boiler_run_time = self.hass.states.get('sensor.boiler_run_time')
+        sensor_energy_output = self.hass.states.get('sensor.energy_output')
+        sensor_pellet_consumption = self.hass.states.get('sensor.pellet_consumption')
+        sensor_last_timestamp = self.hass.states.get('sensor.last_timestamp')
         last_boiler_run_time = float(sensor_boiler_run_time.state) if sensor_boiler_run_time else None
         last_energy_output = float(sensor_energy_output.state) if sensor_energy_output else None
         last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else None
