@@ -154,6 +154,11 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
         return KWBOptionsFlow(config_entry)
 
 
+OPT_LAST_BOILER_RUN_TIME = 'last_boiler_run_time'
+OPT_LAST_ENERGY_OUTPUT = 'last_energy_output'
+OPT_LAST_PELLET_CONSUMPTION = 'last_pellet_consumption'
+OPT_LAST_TIMESTAMP = 'last_timestamp'
+
 class KWBOptionsFlow(OptionsFlow):
     
     def __init__(self, config_entry: ConfigEntry) -> None:
@@ -175,13 +180,18 @@ class KWBOptionsFlow(OptionsFlow):
         # repo_map = {e.entity_id: e for e in entries}
 
         # TODO Load up existing options/config values
+        conf_unique_id = self.config_entry.data.get(CONF_UNIQUE_ID)
         conf_host = self.config_entry.data.get(CONF_HOST)
         conf_model = self.config_entry.data.get(CONF_MODEL)
         conf_port = self.config_entry.data.get(CONF_PORT)
         conf_protocol = self.config_entry.data.get(CONF_PROTOCOL)
         conf_sender = self.config_entry.data.get(CONF_SENDER)
         conf_timeout = self.config_entry.data.get(CONF_TIMEOUT)
-        print(conf_host, conf_model, conf_port, conf_protocol, conf_sender, conf_timeout)
+        conf_boiler_efficiency = self.config_entry.data.get(CONF_BOILER_EFFICIENCY)
+        conf_boiler_nominal_power = self.config_entry.data.get(CONF_BOILER_NOMINAL_POWER)
+        conf_pellet_nominal_energy = self.config_entry.data.get(CONF_PELLET_NOMINAL_ENERGY)
+        logger.error(conf_host, conf_model, conf_port, conf_protocol, conf_sender, conf_timeout)
+        logger.error(conf_boiler_efficiency, conf_boiler_nominal_power, conf_pellet_nominal_energy)
 
         # Load up existing sensor values
         sensor_boiler_run_time = self.hass.states.get('sensor.easyfire_1_kwb_boiler_run_time')
@@ -192,7 +202,44 @@ class KWBOptionsFlow(OptionsFlow):
         last_energy_output = float(sensor_energy_output.state) if sensor_energy_output else None
         last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else None
         last_timestamp = float(sensor_last_timestamp.state) if sensor_last_timestamp else None
-        print(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
+        logger.error(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_UNIQUE_ID, default=conf_unique_id): str,
+                vol.Required(CONF_MODEL, default=conf_model): selector(
+                    {
+                        "select": {
+                            "options": ["easyfire_1"],
+                        }
+                    }
+                ),
+                vol.Required(CONF_SENDER, default=conf_sender): selector(
+                    {
+                        "select": {
+                            "options": ["comfort_3"],
+                        }
+                    }
+                ),
+                vol.Required(CONF_PROTOCOL, default=conf_protocol): selector(
+                    {
+                        "select": {
+                            "options": ["tcp"],
+                        }
+                    }
+                ),
+                vol.Required(CONF_HOST, default=conf_host): str,
+                vol.Required(CONF_PORT, default=conf_port): int,
+                vol.Required(CONF_TIMEOUT, default=conf_timeout): int,
+                vol.Optional(CONF_BOILER_EFFICIENCY, default=conf_boiler_efficiency): float,
+                vol.Optional(CONF_BOILER_NOMINAL_POWER, default=conf_boiler_nominal_power): float,
+                vol.Optional(CONF_PELLET_NOMINAL_ENERGY, default=conf_pellet_nominal_energy): float,
+                vol.Optional(OPT_LAST_BOILER_RUN_TIME, default=last_boiler_run_time): float,
+                vol.Optional(OPT_LAST_ENERGY_OUTPUT, default=last_energy_output): float,
+                vol.Optional(OPT_LAST_PELLET_CONSUMPTION, default=last_pellet_consumption): float,
+                vol.Optional(OPT_LAST_TIMESTAMP, default=last_timestamp): float,
+            }
+        )
 
         if user_input is not None:
             # We got user input, so save it
@@ -206,7 +253,7 @@ class KWBOptionsFlow(OptionsFlow):
                 # TODO clone and set default= in data schema
                 return self.async_show_form(
                     step_id="init",
-                    data_schema=DATA_SCHEMA,
+                    data_schema=schema,
                     errors=errors
                 )
         else:
@@ -215,5 +262,5 @@ class KWBOptionsFlow(OptionsFlow):
             # TODO clone and set default= in data schema
             return self.async_show_form(
                 step_id="init",
-                data_schema=DATA_SCHEMA
+                data_schema=schema
             )
