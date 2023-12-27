@@ -165,10 +165,10 @@ class KWBOptionsFlow(OptionsFlow):
 
         # Grab all configured repos from the entity registry so we can populate the
         # multi-select dropdown that will allow a user to remove a repo.
-        entity_registry: RegistryEntry = await async_get(self.hass)
-        entries: list[RegistryEntry] = async_entries_for_config_entry(
-            entity_registry, self.config_entry.entry_id
-        )
+        # entity_registry: RegistryEntry = await async_get(self.hass)
+        # entries: list[RegistryEntry] = async_entries_for_config_entry(
+        #     entity_registry, self.config_entry.entry_id
+        # )
         # TODO unpack config values
         # Default value for our multi-select.
         # all_repos = {e.entity_id: e.original_name for e in entries}
