@@ -175,12 +175,12 @@ class KWBOptionsFlow(OptionsFlow):
         # repo_map = {e.entity_id: e for e in entries}
 
         # TODO Load up existing options/config values
-        conf_host = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_HOST]
-        conf_model = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_MODEL]
-        conf_port = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_PORT]
-        conf_protocol = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_PROTOCOL]
-        conf_sender = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_SENDER]
-        conf_timeout = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_TIMEOUT]
+        conf_host = self.config_entry.data.get(CONF_HOST)
+        conf_model = self.config_entry.data.get(CONF_MODEL)
+        conf_port = self.config_entry.data.get(CONF_PORT)
+        conf_protocol = self.config_entry.data.get(CONF_PROTOCOL)
+        conf_sender = self.config_entry.data.get(CONF_SENDER)
+        conf_timeout = self.config_entry.data.get(CONF_TIMEOUT)
         print(conf_host, conf_model, conf_port, conf_protocol, conf_sender, conf_timeout)
 
         # Load up existing sensor values
