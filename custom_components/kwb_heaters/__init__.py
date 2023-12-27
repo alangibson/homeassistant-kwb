@@ -18,9 +18,8 @@ logger = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Entry point to set up KWB heaters"""
 
-    hass_data = dict(config_entry.data)
-
-    # Register options update handler
+    # TODO Register options update handler
+    # hass_data = dict(config_entry.data)
     # Registers update listener to update config entry when options are updated.
     # unsub_options_update_listener = config_entry.add_update_listener(options_update_listener)
     # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.

@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -34,6 +35,11 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+    BinarySensorDeviceClass
+)
 
 from pykwb.kwb import load_signal_maps
 from .const import (
@@ -168,6 +174,12 @@ class KWBSensorEntity(CoordinatorEntity, SensorEntity):
         return self.coordinator.data.latest_scrape[sensor_key]
 
 
+class KWBBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
+
+    def __init__(self, coordinator: DataUpdateCoordinator, description: BinarySensorEntityDescription) -> None:
+        super().__init__(coordinator, description)
+
+
 def sensor_descriptions(unique_device_id, model):
     """Transsform pykwb signal maps into KWBSensorEntityDescriptions"""
     for signal_map in load_signal_maps(source=10):
@@ -210,6 +222,20 @@ def sensor_descriptions(unique_device_id, model):
                     device_id=unique_device_id,
                     device_model=model,
                 )
+
+    # yield BinarySensorEntityDescription(
+    #     device_class=BinarySensorDeviceClass.RUNNING,
+    #     # entity_category=...,
+    #     # entity_registry_enabled_default=...,
+    #     # entity_registry_visible_default=...,
+    #     # force_update=...,
+    #     # has_entity_name=...,
+    #     # icon=...,
+    #     key='boiler_on',
+    #     name='Boiler On',
+    #     translation_key='boiler_on',
+    #     # unit_of_measurement=...
+    # )
 
     yield KWBSensorEntityDescription(
         key='boiler_on',
@@ -319,7 +345,7 @@ async def async_setup_entry(
     last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else None
     last_timestamp = float(sensor_last_timestamp.state) if sensor_last_timestamp else None
 
-    print(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
+    # print(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
 
     # Async construct inverter object
     # Make sure we can connect to the inverter
@@ -363,7 +389,7 @@ async def async_setup_entry(
         unique_device_id, config_entry.data.get(CONF_MODEL)
     ):
         # Add in the owning device's unique id
-        description.device_model = config_entry.data.get(CONF_MODEL)
+        # description.device_model = config_entry.data.get(CONF_MODEL)
         # Build sensor name
         entities.append(KWBSensorEntity(coordinator, description))
 
