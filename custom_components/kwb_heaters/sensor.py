@@ -180,6 +180,10 @@ class KWBBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
         super().__init__(coordinator, description)
 
 
+def generate_sensors(coordinator: DataUpdateCoordinator, unique_device_id: str, model: str):
+    pass
+
+
 def sensor_descriptions(unique_device_id, model):
     """Transsform pykwb signal maps into KWBSensorEntityDescriptions"""
     for signal_map in load_signal_maps(source=10):
@@ -345,10 +349,10 @@ async def async_setup_entry(
     last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else None
     last_timestamp = float(sensor_last_timestamp.state) if sensor_last_timestamp else None
 
-    # print(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
+    print(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
 
-    # Async construct inverter object
-    # Make sure we can connect to the inverter
+    # Async construct heater object
+    # Make sure we can connect to the heater
     is_success, heater_or_exception = await hass.async_add_executor_job(
         connect_heater(config_heater)
     )

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pprint import pformat
-from typing import Any
+from typing import Any, Dict
 
 import voluptuous as vol
 
@@ -28,6 +28,11 @@ from homeassistant.core import (
     callback
 )
 from homeassistant.helpers.selector import selector
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get,
+    RegistryEntry
+)
 
 from .const import (
     DEFAULT_NAME,
@@ -158,10 +163,57 @@ class KWBOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Manage the options."""
 
-        if user_input is not None:
-            return self.async_create_entry(title="KWB configuration", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=DATA_SCHEMA
+        # Grab all configured repos from the entity registry so we can populate the
+        # multi-select dropdown that will allow a user to remove a repo.
+        entity_registry: RegistryEntry = await async_get(self.hass)
+        entries: list[RegistryEntry] = async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
         )
+        # TODO unpack config values
+        # Default value for our multi-select.
+        # all_repos = {e.entity_id: e.original_name for e in entries}
+        # repo_map = {e.entity_id: e for e in entries}
+
+        # TODO Load up existing options/config values
+        conf_host = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_HOST]
+        conf_model = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_MODEL]
+        conf_port = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_PORT]
+        conf_protocol = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_PROTOCOL]
+        conf_sender = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_SENDER]
+        conf_timeout = self.hass.data[DOMAIN][self.config_entry.entry_id][CONF_TIMEOUT]
+        print(conf_host, conf_model, conf_port, conf_protocol, conf_sender, conf_timeout)
+
+        # Load up existing sensor values
+        sensor_boiler_run_time = self.hass.states.get('sensor.easyfire_1_kwb_boiler_run_time')
+        sensor_energy_output = self.hass.states.get('sensor.easyfire_1_kwb_energy_output')
+        sensor_pellet_consumption = self.hass.states.get('sensor.easyfire_1_kwb_pellet_consumption')
+        sensor_last_timestamp = self.hass.states.get('sensor.easyfire_1_kwb_last_timestamp')
+        last_boiler_run_time = float(sensor_boiler_run_time.state) if sensor_boiler_run_time else None
+        last_energy_output = float(sensor_energy_output.state) if sensor_energy_output else None
+        last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else None
+        last_timestamp = float(sensor_last_timestamp.state) if sensor_last_timestamp else None
+        print(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
+
+        if user_input is not None:
+            # We got user input, so save it
+
+            errors: Dict[str, str] = {}
+
+            if not errors:
+                return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
+            else:
+                # We got errors, so show error form
+                # TODO clone and set default= in data schema
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=DATA_SCHEMA,
+                    errors=errors
+                )
+        else:
+            # We haven't gotten user input yet, so display form
+
+            # TODO clone and set default= in data schema
+            return self.async_show_form(
+                step_id="init",
+                data_schema=DATA_SCHEMA
+            )
