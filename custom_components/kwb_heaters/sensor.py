@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
+import time
 
 import voluptuous as vol
 
@@ -339,16 +340,15 @@ async def async_setup_entry(
     # HACK remove hardcoded sensor names
     # TODO we need to somehow recover the last boiler_run_time, energy_output and pellet_consumption sensor values
     # They should be fed to the KWBHeater constructor (?)
-    sensor_boiler_run_time = hass.states.get('sensor.easyfire_1_kwb_boiler_run_time')
-    sensor_energy_output = hass.states.get('sensor.easyfire_1_kwb_energy_output')
-    sensor_pellet_consumption = hass.states.get('sensor.easyfire_1_kwb_pellet_consumption')
-    sensor_last_timestamp = hass.states.get('sensor.easyfire_1_kwb_last_timestamp')
-
-    last_boiler_run_time = float(sensor_boiler_run_time.state) if sensor_boiler_run_time else None
-    last_energy_output = float(sensor_energy_output.state) if sensor_energy_output else None
-    last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else None
-    last_timestamp = float(sensor_last_timestamp.state) if sensor_last_timestamp else None
-
+    # FIXME these sensors need to be prefixed with {model}_{unique_id}_
+    sensor_boiler_run_time = hass.states.get('sensor.boiler_run_time')
+    sensor_energy_output = hass.states.get('sensor.energy_output')
+    sensor_pellet_consumption = hass.states.get('sensor.pellet_consumption')
+    sensor_last_timestamp = hass.states.get('sensor.last_timestamp')
+    last_boiler_run_time = float(sensor_boiler_run_time.state) if sensor_boiler_run_time else 0.0
+    last_energy_output = float(sensor_energy_output.state) if sensor_energy_output else 0.0
+    last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else 0.0
+    last_timestamp = float(sensor_last_timestamp.state) if sensor_last_timestamp else time.time_ns() / 1000000
     print(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
 
     # Async construct heater object

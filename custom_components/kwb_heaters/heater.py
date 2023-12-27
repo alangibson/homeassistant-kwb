@@ -16,7 +16,11 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .const import (
     CONF_PELLET_NOMINAL_ENERGY,
     CONF_BOILER_EFFICIENCY,
-    CONF_BOILER_NOMINAL_POWER
+    CONF_BOILER_NOMINAL_POWER,
+    OPT_LAST_TIMESTAMP,
+    OPT_LAST_BOILER_RUN_TIME,
+    OPT_LAST_ENERGY_OUTPUT,
+    OPT_LAST_PELLET_CONSUMPTION
 )
 
 logger = logging.getLogger(__name__)
@@ -32,8 +36,13 @@ class KWBHeater:
             'boiler_efficiency': config.get(CONF_BOILER_EFFICIENCY),
             'boiler_nominal_power_kW': config.get(CONF_BOILER_NOMINAL_POWER)
         }
-        logger.error("heater_config=%s" % heater_config )
-        self.message_stream = KWBMessageStream(reader=reader, signal_maps=signal_maps, heater_config=heater_config)
+        last_values = {
+            'last_timestamp': config.get(OPT_LAST_TIMESTAMP),
+            'boiler_run_time': config.get(OPT_LAST_BOILER_RUN_TIME),
+            'energy_output': config.get(OPT_LAST_ENERGY_OUTPUT),
+            'pellet_consumption': config.get(OPT_LAST_PELLET_CONSUMPTION)
+        }
+        self.message_stream = KWBMessageStream(reader=reader, signal_maps=signal_maps, heater_config=heater_config, last_values=last_values)
         # FIXME remove hard coded ids
         self.message_ids = [32, 33, 64, 65]
         self.read_timeout = config.get(CONF_TIMEOUT, 2)

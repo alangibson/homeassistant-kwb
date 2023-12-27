@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from pprint import pformat
+import time
 from typing import Any, Dict
 
 import voluptuous as vol
@@ -39,7 +39,11 @@ from .const import (
     DOMAIN,
     CONF_PELLET_NOMINAL_ENERGY,
     CONF_BOILER_EFFICIENCY,
-    CONF_BOILER_NOMINAL_POWER
+    CONF_BOILER_NOMINAL_POWER,
+    OPT_LAST_BOILER_RUN_TIME,
+    OPT_LAST_ENERGY_OUTPUT,
+    OPT_LAST_PELLET_CONSUMPTION,
+    OPT_LAST_TIMESTAMP
 )
 from .heater import connect_heater
 
@@ -154,11 +158,6 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
         return KWBOptionsFlow(config_entry)
 
 
-OPT_LAST_BOILER_RUN_TIME = 'last_boiler_run_time'
-OPT_LAST_ENERGY_OUTPUT = 'last_energy_output'
-OPT_LAST_PELLET_CONSUMPTION = 'last_pellet_consumption'
-OPT_LAST_TIMESTAMP = 'last_timestamp'
-
 class KWBOptionsFlow(OptionsFlow):
     
     def __init__(self, config_entry: ConfigEntry) -> None:
@@ -190,8 +189,8 @@ class KWBOptionsFlow(OptionsFlow):
         conf_boiler_efficiency = self.config_entry.data.get(CONF_BOILER_EFFICIENCY)
         conf_boiler_nominal_power = self.config_entry.data.get(CONF_BOILER_NOMINAL_POWER)
         conf_pellet_nominal_energy = self.config_entry.data.get(CONF_PELLET_NOMINAL_ENERGY)
-        logger.error(conf_host, conf_model, conf_port, conf_protocol, conf_sender, conf_timeout)
-        logger.error(conf_boiler_efficiency, conf_boiler_nominal_power, conf_pellet_nominal_energy)
+        # logger.error(conf_host, conf_model, conf_port, conf_protocol, conf_sender, conf_timeout)
+        # logger.error(conf_boiler_efficiency, conf_boiler_nominal_power, conf_pellet_nominal_energy)
 
         # Load up existing sensor values
         # FIXME these sensors need to be prefixed with {model}_{unique_id}_
@@ -199,11 +198,11 @@ class KWBOptionsFlow(OptionsFlow):
         sensor_energy_output = self.hass.states.get('sensor.energy_output')
         sensor_pellet_consumption = self.hass.states.get('sensor.pellet_consumption')
         sensor_last_timestamp = self.hass.states.get('sensor.last_timestamp')
-        last_boiler_run_time = float(sensor_boiler_run_time.state) if sensor_boiler_run_time else None
-        last_energy_output = float(sensor_energy_output.state) if sensor_energy_output else None
-        last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else None
-        last_timestamp = float(sensor_last_timestamp.state) if sensor_last_timestamp else None
-        logger.error(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
+        last_boiler_run_time = float(sensor_boiler_run_time.state) if sensor_boiler_run_time else 0.0
+        last_energy_output = float(sensor_energy_output.state) if sensor_energy_output else 0.0
+        last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else 0.0
+        last_timestamp = float(sensor_last_timestamp.state) if sensor_last_timestamp else time.time_ns() / 1000000
+        # logger.error(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
 
         schema = vol.Schema(
             {
