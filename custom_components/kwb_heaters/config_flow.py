@@ -167,6 +167,8 @@ class KWBOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Manage the options."""
 
+        logger.error('async_step_init')
+
         # Grab all configured repos from the entity registry so we can populate the
         # multi-select dropdown that will allow a user to remove a repo.
         # entity_registry: RegistryEntry = await async_get(self.hass)
