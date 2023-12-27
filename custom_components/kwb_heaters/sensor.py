@@ -48,7 +48,11 @@ from .const import (
     MIN_TIME_BETWEEN_UPDATES,
     CONF_PELLET_NOMINAL_ENERGY,
     CONF_BOILER_EFFICIENCY,
-    CONF_BOILER_NOMINAL_POWER
+    CONF_BOILER_NOMINAL_POWER,
+    OPT_LAST_TIMESTAMP,
+    OPT_LAST_BOILER_RUN_TIME,
+    OPT_LAST_ENERGY_OUTPUT,
+    OPT_LAST_PELLET_CONSUMPTION
 )
 from .heater import connect_heater, data_updater
 
@@ -350,6 +354,13 @@ async def async_setup_entry(
     last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else 0.0
     last_timestamp = float(sensor_last_timestamp.state) if sensor_last_timestamp else time.time_ns() / 1000000
     print(last_boiler_run_time, last_energy_output, last_pellet_consumption, last_timestamp)
+
+    config_heater.update({
+        OPT_LAST_TIMESTAMP: last_timestamp,
+        OPT_LAST_BOILER_RUN_TIME: last_boiler_run_time,
+        OPT_LAST_ENERGY_OUTPUT: last_energy_output,
+        OPT_LAST_PELLET_CONSUMPTION: last_pellet_consumption
+    })
 
     # Async construct heater object
     # Make sure we can connect to the heater
