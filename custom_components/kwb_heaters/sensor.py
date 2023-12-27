@@ -322,6 +322,9 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
+    
+    logger.error('sensor.async_setup_entry')
+
     # Get a unique id for the inverter device
     if (unique_device_id := config_entry.data.get(CONF_UNIQUE_ID)) is None:
         # unique_device_id = config_entry.entry_id

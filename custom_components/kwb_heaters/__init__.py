@@ -3,14 +3,13 @@
 import logging
 
 from homeassistant.config_entries import (
-    ConfigEntry,
-    OptionsFlow
+    ConfigEntry
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .config_flow import KWBOptionsFlow
 from .const import DOMAIN
+from .config_flow import options_update_listener
 
 logger = logging.getLogger(__name__)
 
@@ -34,21 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     )
 
     return True
-
-
-# @staticmethod
-# @callback
-# def async_get_options_flow(
-#     config_entry: ConfigEntry,
-# ) -> OptionsFlow:
-#     """Create the options flow."""
-#     return KWBOptionsFlow(config_entry)
-
-
-async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Handle options update."""
-    logger.error("options_update_listener called!")
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 # TODO Unload gracefully

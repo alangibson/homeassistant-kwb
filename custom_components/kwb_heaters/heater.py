@@ -111,9 +111,15 @@ def data_updater(heater: KWBHeater):
     """Function called by DataUpdateCoordinator to do the data refresh from the heater"""
 
     def u():
-        is_success = heater.scrape()
+        try:
+            is_success = heater.scrape()
+        except Exception as e:
+            logger.error("Failed scraping KWB heater", exc_info=e)
+            raise UpdateFailed("Failed scraping KWB heater")
+        
         if not is_success or heater.latest_scrape == {}:
             raise UpdateFailed("Failed scraping KWB heater")
+        
         return heater
 
     return u

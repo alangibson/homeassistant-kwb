@@ -266,3 +266,31 @@ class KWBOptionsFlow(OptionsFlow):
                 step_id="init",
                 data_schema=schema
             )
+
+async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Handle options update."""
+    logger.error("options_update_listener called!")
+
+    # TODO Save these?
+    # conf_unique_id = self.config_entry.data.get(CONF_UNIQUE_ID)
+    # conf_host = self.config_entry.data.get(CONF_HOST)
+    # conf_model = self.config_entry.data.get(CONF_MODEL)
+    # conf_port = self.config_entry.data.get(CONF_PORT)
+    # conf_protocol = self.config_entry.data.get(CONF_PROTOCOL)
+    # conf_sender = self.config_entry.data.get(CONF_SENDER)
+    # conf_timeout = self.config_entry.data.get(CONF_TIMEOUT)
+    # conf_boiler_efficiency = self.config_entry.data.get(CONF_BOILER_EFFICIENCY)
+    # conf_boiler_nominal_power = self.config_entry.data.get(CONF_BOILER_NOMINAL_POWER)
+    # conf_pellet_nominal_energy = self.config_entry.data.get(CONF_PELLET_NOMINAL_ENERGY)
+    # # FIXME these sensors need to be prefixed with {model}_{unique_id}_
+    # sensor_boiler_run_time = self.hass.states.get('sensor.boiler_run_time')
+    # sensor_energy_output = self.hass.states.get('sensor.energy_output')
+    # sensor_pellet_consumption = self.hass.states.get('sensor.pellet_consumption')
+    # sensor_last_timestamp = self.hass.states.get('sensor.last_timestamp')
+    # last_boiler_run_time = float(sensor_boiler_run_time.state) if sensor_boiler_run_time else 0.0
+    # last_energy_output = float(sensor_energy_output.state) if sensor_energy_output else 0.0
+    # last_pellet_consumption = float(sensor_pellet_consumption.state) if sensor_pellet_consumption else 0.0
+    # last_timestamp = float(sensor_last_timestamp.state) if sensor_last_timestamp else time.time_ns() / 1000000
+
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
