@@ -10,21 +10,38 @@
     "step": {
       "user": {
         "data": {
-          "unique_id": "Name of heater",
+          "unique_id": "Serial Number",
           "host": "Hostname or IP address",
           "port": "Port",
-          "timeout": "Connection timeout",
+          "timeout": "Message read timeout",
           "connection": "Connection type",
           "model": "Heater model",
-          "sender": "Control model",
+          "sender": "Controler model",
           "protocol": "Communication protocol",
           "boiler_efficiency": "Boiler Efficiency [%]",
           "boiler_nominal_power_kW": "Boiler Nominal Power [kW]",
           "pellet_nominal_energy_kWh_kg": "Pellet Nominal Energy [kWh/kg]",
           "last_boiler_run_time": "Last Boiler Run Time [sec]",
           "last_energy_output": "Last Energy Output [kWh]",
-          "last_pellet_consumption": "Last Ppellet Consumption [kg]",
+          "last_pellet_consumption": "Last Pellet Consumption [kg]",
           "last_timestamp": "Last Timestamp [msec]"
+        },
+        "data_description": {
+          "unique_id": "Found on name plate. Use only numbers and letters",
+          "host": "Hostname or IP address of RS485 to LAN server",
+          "port": "TCP port of RS485 to LAN server",
+          "timeout": "Max time to wait for messages",
+          "connection": "Connection type",
+          "model": "Heater model",
+          "sender": "Controler model",
+          "protocol": "Communication protocol",
+          "boiler_efficiency": "Use 90 if you don't know this value",
+          "boiler_nominal_power_kW": "Found on name plate",
+          "pellet_nominal_energy_kWh_kg": "Get from your pellet provider",
+          "last_boiler_run_time": "Use only for disaster recovery",
+          "last_energy_output": "Use only for disaster recovery",
+          "last_pellet_consumption": "Use only for disaster recovery",
+          "last_timestamp": "Use only for disaster recovery"
         }
       }
     }
@@ -60,7 +77,7 @@
   "selector": {
     "model": {
       "options": {
-        "easyfire_1": "EasyFire 1",
+        "easyfire_1": "EasyFire",
         "unknown": "All other models"
       }
     },

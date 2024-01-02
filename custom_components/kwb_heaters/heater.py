@@ -5,12 +5,7 @@ import logging
 
 from pykwb.kwb import KWBMessageStream, TCPByteReader, load_signal_maps
 
-from homeassistant.const import (
-    CONF_HOST, 
-    CONF_PORT, 
-    CONF_TIMEOUT, 
-    CONF_UNIQUE_ID
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TIMEOUT, CONF_UNIQUE_ID
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
@@ -20,7 +15,7 @@ from .const import (
     OPT_LAST_TIMESTAMP,
     OPT_LAST_BOILER_RUN_TIME,
     OPT_LAST_ENERGY_OUTPUT,
-    OPT_LAST_PELLET_CONSUMPTION
+    OPT_LAST_PELLET_CONSUMPTION,
 )
 
 logger = logging.getLogger(__name__)
@@ -32,17 +27,22 @@ class KWBHeater:
         self.unique_id = config.get(CONF_UNIQUE_ID)
         self.unique_key = config.get(CONF_UNIQUE_ID).lower().replace(" ", "_")
         heater_config = {
-            'pellet_nominal_energy_kWh_kg': config.get(CONF_PELLET_NOMINAL_ENERGY),
-            'boiler_efficiency': config.get(CONF_BOILER_EFFICIENCY),
-            'boiler_nominal_power_kW': config.get(CONF_BOILER_NOMINAL_POWER)
+            "pellet_nominal_energy_kWh_kg": config.get(CONF_PELLET_NOMINAL_ENERGY),
+            "boiler_efficiency": config.get(CONF_BOILER_EFFICIENCY),
+            "boiler_nominal_power_kW": config.get(CONF_BOILER_NOMINAL_POWER),
         }
         last_values = {
-            'last_timestamp': config.get(OPT_LAST_TIMESTAMP),
-            'boiler_run_time': config.get(OPT_LAST_BOILER_RUN_TIME),
-            'energy_output': config.get(OPT_LAST_ENERGY_OUTPUT),
-            'pellet_consumption': config.get(OPT_LAST_PELLET_CONSUMPTION)
+            "last_timestamp": config.get(OPT_LAST_TIMESTAMP),
+            "boiler_run_time": config.get(OPT_LAST_BOILER_RUN_TIME),
+            "energy_output": config.get(OPT_LAST_ENERGY_OUTPUT),
+            "pellet_consumption": config.get(OPT_LAST_PELLET_CONSUMPTION),
         }
-        self.message_stream = KWBMessageStream(reader=reader, signal_maps=signal_maps, heater_config=heater_config, last_values=last_values)
+        self.message_stream = KWBMessageStream(
+            reader=reader,
+            signal_maps=signal_maps,
+            heater_config=heater_config,
+            last_values=last_values,
+        )
         # FIXME remove hard coded ids
         self.message_ids = [32, 33, 64, 65]
         self.read_timeout = config.get(CONF_TIMEOUT, 2)
@@ -57,7 +57,7 @@ class KWBHeater:
 
     def scrape(self):
         self.message_stream.open()
-        
+
         # TODO use read_data(), not read_messages()
         # message_generator = self.message_stream.read_messages(
         #     self.message_ids, self.read_timeout
@@ -86,7 +86,7 @@ def create_heater(config_heater: dict) -> tuple[bool, KWBHeater | Exception]:
             heater = KWBHeater(config_heater, signal_maps)
             is_success = heater.scrape()
         except Exception as e:
-            logger.error("Error connecting to heater: %s" % e)
+            logger.error("Error connecting to heater", exc_info=e)
             return False, e
         return is_success, heater
 
@@ -116,10 +116,10 @@ def data_updater(heater: KWBHeater):
         except Exception as e:
             logger.error("Failed scraping KWB heater", exc_info=e)
             raise UpdateFailed("Failed scraping KWB heater")
-        
+
         if not is_success or heater.latest_scrape == {}:
             raise UpdateFailed("Failed scraping KWB heater")
-        
+
         return heater
 
     return u
