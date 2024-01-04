@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from typing import Any, Dict
 
 import voluptuous as vol
@@ -24,16 +23,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
-    async_entries_for_config_entry,
-    async_get,
-)
-from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-    selector,
-)
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     CONF_BOILER_EFFICIENCY,
@@ -41,12 +31,8 @@ from .const import (
     CONF_PELLET_NOMINAL_ENERGY,
     DEFAULT_NAME,
     DOMAIN,
-    OPT_LAST_BOILER_RUN_TIME,
-    OPT_LAST_ENERGY_OUTPUT,
-    OPT_LAST_PELLET_CONSUMPTION,
-    OPT_LAST_TIMESTAMP,
 )
-from .heater import connect_heater
+from .src.impl.appliance import connect_appliance
 
 logger = logging.getLogger(__name__)
 
@@ -65,24 +51,23 @@ def data_schema(defaults: dict):
     conf_boiler_nominal_power = defaults.get(CONF_BOILER_NOMINAL_POWER)
     conf_pellet_nominal_energy = defaults.get(CONF_PELLET_NOMINAL_ENERGY)
     # Load up existing sensor values
-    sensor_boiler_run_time = defaults.get("boiler_run_time")
-    sensor_energy_output = defaults.get("energy_output")
-    sensor_pellet_consumption = defaults.get("pellet_consumption")
-    sensor_last_timestamp = defaults.get("last_timestamp")
-
-    last_boiler_run_time = (
-        float(sensor_boiler_run_time) if sensor_boiler_run_time else None
-    )
-    last_energy_output = float(sensor_energy_output) if sensor_energy_output else None
-    last_pellet_consumption = (
-        float(sensor_pellet_consumption) if sensor_pellet_consumption else None
-    )
-    last_timestamp = (
-        float(sensor_last_timestamp)
-        if sensor_last_timestamp
-        # else time.time_ns() / 1000000
-        else None
-    )
+    # sensor_boiler_run_time = defaults.get("boiler_run_time")
+    # sensor_energy_output = defaults.get("boiler_energy")
+    # sensor_pellet_consumption = defaults.get("pellet_consumption")
+    # sensor_last_timestamp = defaults.get("last_timestamp")
+    # last_boiler_run_time = (
+    #     float(sensor_boiler_run_time) if sensor_boiler_run_time else None
+    # )
+    # last_energy_output = float(sensor_energy_output) if sensor_energy_output else None
+    # last_pellet_consumption = (
+    #     float(sensor_pellet_consumption) if sensor_pellet_consumption else None
+    # )
+    # last_timestamp = (
+    #     float(sensor_last_timestamp)
+    #     if sensor_last_timestamp
+    #     # else time.time_ns() / 1000000
+    #     else None
+    # )
 
     schema = vol.Schema(
         {
@@ -139,7 +124,7 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Validate the data can be used to set up a connection.
         is_success, heater = await hass.async_add_executor_job(
-            connect_heater(user_input)
+            connect_appliance(user_input)
         )
         # If we can't connect, set a value indicating this so we can tell the user
         if not is_success:

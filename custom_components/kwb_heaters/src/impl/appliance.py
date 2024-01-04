@@ -1,27 +1,27 @@
-"""Glue code that allows HomeAssistant to get data from pykwb
-"""
+"""Glue code that allows HomeAssistant to get data from pykwb."""
 
 import logging
 
 from pykwb.kwb import KWBMessageStream, TCPByteReader, load_signal_maps
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TIMEOUT, CONF_UNIQUE_ID
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import (
-    CONF_PELLET_NOMINAL_ENERGY,
+from ...const import (
     CONF_BOILER_EFFICIENCY,
     CONF_BOILER_NOMINAL_POWER,
-    OPT_LAST_TIMESTAMP,
+    CONF_PELLET_NOMINAL_ENERGY,
     OPT_LAST_BOILER_RUN_TIME,
     OPT_LAST_ENERGY_OUTPUT,
     OPT_LAST_PELLET_CONSUMPTION,
+    OPT_LAST_TIMESTAMP,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class KWBHeater:
+class Appliance:
+    """A physical appliance or service."""
+
     def __init__(self, config, signal_maps):
         reader = TCPByteReader(ip=config.get(CONF_HOST), port=config.get(CONF_PORT))
         self.unique_id = config.get(CONF_UNIQUE_ID)
@@ -34,7 +34,7 @@ class KWBHeater:
         last_values = {
             "last_timestamp": config.get(OPT_LAST_TIMESTAMP),
             "boiler_run_time": config.get(OPT_LAST_BOILER_RUN_TIME),
-            "energy_output": config.get(OPT_LAST_ENERGY_OUTPUT),
+            "boiler_energy": config.get(OPT_LAST_ENERGY_OUTPUT),
             "pellet_consumption": config.get(OPT_LAST_PELLET_CONSUMPTION),
         }
         self.message_stream = KWBMessageStream(
@@ -79,11 +79,11 @@ class KWBHeater:
         return True
 
 
-def create_heater(config_heater: dict) -> tuple[bool, KWBHeater | Exception]:
+def create_appliance(config_heater: dict) -> tuple[bool, Appliance | Exception]:
     def f():
         try:
             signal_maps = load_signal_maps()
-            heater = KWBHeater(config_heater, signal_maps)
+            heater = Appliance(config_heater, signal_maps)
             is_success = heater.scrape()
         except Exception as e:
             logger.error("Error connecting to heater", exc_info=e)
@@ -93,33 +93,15 @@ def create_heater(config_heater: dict) -> tuple[bool, KWBHeater | Exception]:
     return f
 
 
-def connect_heater(config_heater: dict) -> tuple[bool, KWBHeater | Exception]:
+def connect_appliance(config_heater: dict) -> tuple[bool, Appliance | Exception]:
     """Called by config_flow.py"""
 
     def f():
         try:
-            is_success, heater = create_heater(config_heater)()
+            is_success, heater = create_appliance(config_heater)()
         except Exception as e:
             return False, e
 
         return is_success, heater
 
     return f
-
-
-def data_updater(heater: KWBHeater):
-    """Function called by DataUpdateCoordinator to do the data refresh from the heater"""
-
-    def u():
-        try:
-            is_success = heater.scrape()
-        except Exception as e:
-            logger.error("Failed scraping KWB heater", exc_info=e)
-            raise UpdateFailed("Failed scraping KWB heater")
-
-        if not is_success or heater.latest_scrape == {}:
-            raise UpdateFailed("Failed scraping KWB heater")
-
-        return heater
-
-    return u

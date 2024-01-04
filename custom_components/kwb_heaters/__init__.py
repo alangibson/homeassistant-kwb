@@ -6,19 +6,16 @@ import time
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_HOST,
     CONF_MODEL,
-    CONF_NAME,
     CONF_PORT,
     CONF_PROTOCOL,
-    CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
-    CONF_TYPE,
     CONF_UNIQUE_ID,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -28,21 +25,25 @@ from .const import (
     CONF_BOILER_NOMINAL_POWER,
     CONF_PELLET_NOMINAL_ENERGY,
     DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
     OPT_LAST_BOILER_RUN_TIME,
     OPT_LAST_ENERGY_OUTPUT,
     OPT_LAST_PELLET_CONSUMPTION,
     OPT_LAST_TIMESTAMP,
 )
-from .heater import connect_heater, data_updater
+from .coordinator import data_updater
+from .src.impl.appliance import connect_appliance
 
 logger = logging.getLogger(__name__)
 
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+SCAN_INTERVAL_SEC = 10
+
+# HomeAssistant reads this for entities with async_update() (?)
+SCAN_INTERVAL = timedelta(seconds=SCAN_INTERVAL_SEC)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> True:
     """Entry point to set up KWB heaters"""
 
     # Get a unique id for the inverter device
@@ -97,15 +98,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     # Async construct heater object
     # Make sure we can connect to the heater
     is_success, heater_or_exception = await hass.async_add_executor_job(
-        connect_heater(config_heater)
+        connect_appliance(config_heater)
     )
     if not is_success:
         logger.error("Failed to connect to heater", exc_info=heater_or_exception)
-        return
+        # return False
+        raise ConfigEntryNotReady("Failed to connect to heater")
 
     # Configure DataUpdateCoordinator
     async def data_update_method():
-        return await hass.async_add_executor_job(data_updater(heater_or_exception))
+        # return await hass.async_add_executor_job(data_updater(heater_or_exception))
+        return data_updater(heater_or_exception)()
 
     # TODO move this to __init__.py
     # Create a data update coordinator
@@ -114,26 +117,34 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         logger,
         name=DOMAIN,
         update_method=data_update_method,
-        update_interval=max(
-            timedelta(seconds=config_entry.data.get(CONF_SCAN_INTERVAL, 5)),
-            MIN_TIME_BETWEEN_UPDATES,
-        ),
+        update_interval=SCAN_INTERVAL,
     )
     # and fetch data (at least) once via DataUpdateCoordinator
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
         "coordinator": coordinator,
         "device": heater_or_exception,
     }
 
+    # We can't add CONF_UNIQUE_ID here or we get an error in the device registry
+    device_info: device_registry.DeviceInfo = {
+        "identifiers": {(DOMAIN, unique_device_id)},
+        "manufacturer": "KWB",
+        "name": f"KWB {config_entry.data.get(CONF_MODEL)}",
+        "model": config_entry.data.get(CONF_MODEL),
+    }
+
     # Register our inverter device
-    device_registry.async_get(hass).async_get_or_create(
+    device_entry: device_registry.DeviceEntry = device_registry.async_get(
+        hass
+    ).async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, unique_device_id)},
-        manufacturer="KWB",
-        name=f"KWB {config_entry.data.get(CONF_MODEL)}",
-        model=config_entry.data.get(CONF_MODEL),
+        # identifiers={(DOMAIN, unique_device_id)},
+        # manufacturer="KWB",
+        # name=f"KWB {config_entry.data.get(CONF_MODEL)}",
+        # model=config_entry.data.get(CONF_MODEL),
+        **device_info,
     )
 
     # Register options update handler
