@@ -3,9 +3,9 @@ import logging
 
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from ....tmpl.platform.sensor.sensor import Sensor
-from ....tmpl.platform.sensor.sensor_coordinated import CoordinatedSensor
-from ....tmpl.platform.sensor.sensor_description import SensorDescription
+from ....api.platform.sensor.sensor import Sensor
+from ....api.platform.sensor.sensor_coordinated import CoordinatedSensor
+from ....api.platform.sensor.sensor_description import SensorDescription
 
 logger = logging.getLogger(__name__)
 

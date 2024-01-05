@@ -12,10 +12,17 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .....const import CONF_BOILER_EFFICIENCY, CONF_BOILER_NOMINAL_POWER
+from .....const import (
+    CONF_BOILER_EFFICIENCY,
+    CONF_BOILER_NOMINAL_POWER,
+    CONF_PELLET_NOMINAL_ENERGY,
+)
+from ....api.platform.sensor.sensor_coordinated import CoordinatedSensor
+from ....api.platform.sensor.sensor_description import SensorDescription
 from ....impl.platform.sensor.boiler_energy_sensor import KWBBoilerEnergySensor
-from ....tmpl.platform.sensor.sensor_coordinated import CoordinatedSensor
-from ....tmpl.platform.sensor.sensor_description import SensorDescription
+from ....impl.platform.sensor.pellet_consumption_sensor import (
+    KWBPelletConsumptionSensor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +44,7 @@ def setup_entities(
     # We will need these for later use at the end
     boiler_nominal_power: float = config_entry.data.get(CONF_BOILER_NOMINAL_POWER)
     boiler_efficiency: float = config_entry.data.get(CONF_BOILER_EFFICIENCY)
+    pellet_energy: float = config_entry.data.get(CONF_PELLET_NOMINAL_ENERGY)
     boiler_output_sensor: CoordinatedSensor = None
 
     entities = []
@@ -75,6 +83,32 @@ def setup_entities(
                     boiler_output_sensor = sensor
 
                 entities.append(sensor)
+
+    # f_get_native_value: GetNativeValueType = (
+    #     lambda sensor: sensor.coordinator.latest_scrape[sensor.entity_description.key],
+    # )
+    # f_get_unique_sensor_id: GetUniqueSensorIdType = (
+    #     lambda sensor: f"{list(sensor.device_info.get('identifiers'))[0][1]}_{sensor.entity_description.key}"
+    # )
+    # f_get_available: GetAvailableType = lambda sensor: True
+    # entities.append(
+    #     ComposableSensor(
+    #         coordinator=coordinator,
+    #         device_info=device_info,
+    #         entity_description=ComposableSensorDescription(
+    #             key="boiler_power",
+    #             translation_key="boiler_power",
+    #             name=f"{model} {unique_device_id} Boiler Power",
+    #             native_unit_of_measurement=UnitOfPower.KILO_WATT,
+    #             device_class=SensorDeviceClass.POWER,
+    #             state_class=state_class,
+    #             coordinated=True,
+    #             f_get_native_value=f_get_native_value,
+    #             f_get_unique_sensor_id=f_get_unique_sensor_id,
+    #             f_get_available=f_get_available,
+    #         ),
+    #     )
+    # )
 
     entities.append(
         CoordinatedSensor(
@@ -123,20 +157,6 @@ def setup_entities(
             coordinator=coordinator,
             device_info=device_info,
             description=SensorDescription(
-                key="pellet_consumption",
-                translation_key="pellet_consumption",
-                name=f"{model} {unique_device_id} Pellet Consumption",
-                native_unit_of_measurement="kg",
-                device_class=SensorDeviceClass.WEIGHT,
-                state_class=state_class,
-            ),
-        )
-    )
-    entities.append(
-        CoordinatedSensor(
-            coordinator=coordinator,
-            device_info=device_info,
-            description=SensorDescription(
                 key="last_timestamp",
                 translation_key="last_timestamp",
                 name=f"{model} {unique_device_id} Last Timestamp",
@@ -169,5 +189,21 @@ def setup_entities(
         ),
     )
     entities.append(boiler_energy_sensor)
+
+    entities.append(
+        KWBPelletConsumptionSensor(
+            device_info=device_info,
+            pellet_energy=pellet_energy,
+            boiler_energy_sensor=boiler_energy_sensor,
+            entity_description=SensorDescription(
+                key="pellet_consumption",
+                translation_key="pellet_consumption",
+                name=f"{model} {unique_device_id} Pellet Consumption",
+                native_unit_of_measurement="kg",
+                device_class=SensorDeviceClass.WEIGHT,
+                state_class=state_class,
+            ),
+        )
+    )
 
     return entities

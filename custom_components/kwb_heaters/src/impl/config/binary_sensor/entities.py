@@ -10,10 +10,10 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from ....tmpl.platform.binary_sensor.binary_sensor_coordinated import (
+from ....api.platform.binary_sensor.binary_sensor_coordinated import (
     CoordinatedBinarySensor,
 )
-from ....tmpl.platform.binary_sensor.binary_sensor_description import (
+from ....api.platform.binary_sensor.binary_sensor_description import (
     BinarySensorDescription,
 )
 

@@ -101,3 +101,6 @@ class Appliance:
     """
 
     devices: Device[] = []
+
+    async def poll(self):
+        """Poll appliance for new data for all child devices."""
