@@ -1,0 +1,62 @@
+{
+  "title": "KWB Easyfire",
+  "config": {
+    "step": {
+      "user": {
+        "title": "KWB-Heizung einrichten",
+        "description": "Wähle einen Namen und die Verbindungsart für deine KWB-Heizung. Du kannst außerdem die Nennleistung angeben, um die aktuelle Wärmeleistung zu berechnen.",
+        "data": {
+          "name": "Name der Heizung",
+          "type": "Verbindungsart",
+          "nominal_power": "Nennleistung der Heizung (kW)"
+        },
+        "data_description": {
+          "name": "Wird für das Gerät und seine Sensornamen verwendet, zum Beispiel Kellerheizung.",
+          "type": "Wähle Seriell für ein direkt mit dem Home-Assistant-Host verbundenes Gerät oder TCP für einen Seriell-Ethernet-Server.",
+          "nominal_power": "Optional. Gib die thermische Nennleistung vom Typenschild der Heizung in kW an (größer als 0), zum Beispiel 25. Lass das Feld leer, wenn die Nennleistung unbekannt ist."
+        }
+      },
+      "serial": {
+        "title": "Serielle Verbindung",
+        "description": "Gib den Pfad des seriellen Geräts an, unter dem Home Assistant darauf zugreifen kann.",
+        "data": {
+          "device": "Pfad des seriellen Geräts",
+          "raw": "Sensoren für Rohdatenpakete hinzufügen"
+        },
+        "data_description": {
+          "device": "Zum Beispiel /dev/ttyUSB0. Verwende möglichst einen dauerhaften Pfad unter /dev/serial/by-id/, damit die Verbindung nach einem Neustart erhalten bleibt.",
+          "raw": "Zeigt Sensoren für Rohdatenpakete zur Fehlerdiagnose an. Im normalen Betrieb deaktiviert lassen."
+        }
+      },
+      "tcp": {
+        "title": "TCP-Verbindung",
+        "description": "Gib die Netzwerkadresse und den TCP-Port des Seriell-Ethernet-Servers an, der mit deiner Heizung verbunden ist.",
+        "data": {
+          "host": "Hostname oder IP-Adresse",
+          "port": "TCP-Port",
+          "raw": "Sensoren für Rohdatenpakete hinzufügen"
+        },
+        "data_description": {
+          "host": "Zum Beispiel 192.168.1.50 oder boiler.local. Gib nur den Hostnamen oder die IP-Adresse an, ohne URL-Schema oder Port.",
+          "port": "Der TCP-Port des seriellen Servers (1–65535). Der Standardwert ist 23. Verwende den auf deinem Server eingestellten Port.",
+          "raw": "Zeigt Sensoren für Rohdatenpakete zur Fehlerdiagnose an. Im normalen Betrieb deaktiviert lassen."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung nicht möglich. Prüfe bei seriellen Verbindungen den Gerätepfad und die Zugriffsrechte von Home Assistant. Prüfe bei TCP den Hostnamen, den Port und die Netzwerkverbindung."
+    },
+    "abort": {
+      "already_configured": "Diese Heizungsverbindung ist bereits eingerichtet.",
+      "already_in_progress": "Diese Heizungsverbindung wird bereits eingerichtet."
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "serial": "Seriell",
+        "tcp": "TCP"
+      }
+    }
+  }
+}

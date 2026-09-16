@@ -1,0 +1,62 @@
+{
+  "title": "KWB Easyfire",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up a KWB heater",
+        "description": "Choose a name and connection type for your KWB heater. You can also enter its nominal power to calculate the current heat output.",
+        "data": {
+          "name": "Heater name",
+          "type": "Connection type",
+          "nominal_power": "Nominal heater power (kW)"
+        },
+        "data_description": {
+          "name": "Used for the device and its sensor names, for example, Basement heater.",
+          "type": "Choose Serial for a device connected directly to the Home Assistant host, or TCP for a serial-to-Ethernet server.",
+          "nominal_power": "Optional. Enter the rated thermal output from the heater’s nameplate in kW (greater than 0), for example, 25. Leave blank if the rating is unknown."
+        }
+      },
+      "serial": {
+        "title": "Serial connection",
+        "data": {
+          "device": "Serial device path",
+          "raw": "Include raw packet sensors"
+        },
+        "data_description": {
+          "device": "For example, /dev/ttyUSB0. Prefer a persistent /dev/serial/by-id/ path so the connection remains valid after a restart.",
+          "raw": "Expose raw packet sensors for troubleshooting. Leave this disabled for normal use."
+        },
+        "description": "Enter the serial device path as seen by Home Assistant."
+      },
+      "tcp": {
+        "title": "TCP connection",
+        "data": {
+          "host": "Hostname or IP address",
+          "port": "TCP port",
+          "raw": "Include raw packet sensors"
+        },
+        "description": "Enter the network address and TCP port of the serial-to-Ethernet server connected to your heater.",
+        "data_description": {
+          "host": "For example, 192.168.1.50 or boiler.local. Enter only the hostname or IP address, without a URL scheme or port.",
+          "port": "The serial server’s TCP listening port (1–65535). The default is 23; use the port configured on your server.",
+          "raw": "Expose raw packet sensors for troubleshooting. Leave this disabled for normal use."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect. For serial, check the device path and Home Assistant’s access to the device. For TCP, check the host, port, and network connection."
+    },
+    "abort": {
+      "already_configured": "This heater connection is already configured.",
+      "already_in_progress": "Setup for this heater connection is already in progress."
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "serial": "Serial",
+        "tcp": "TCP"
+      }
+    }
+  }
+}
