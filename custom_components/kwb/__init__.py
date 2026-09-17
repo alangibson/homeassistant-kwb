@@ -8,13 +8,21 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .client import KWBClient, create_client
+from .const import PROPERTY_DEFAULTS
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER, Platform.BUTTON]
 type KWBConfigEntry = ConfigEntry[KWBClient]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KWBConfigEntry) -> bool:
     """Open the heater connection and set up its sensors."""
+    missing = {
+        key: value
+        for key, value in PROPERTY_DEFAULTS.items()
+        if entry.data.get(key) is None
+    }
+    if missing:
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **missing})
     try:
         client = await hass.async_add_executor_job(create_client, entry.data)
     except OSError as err:
@@ -31,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KWBConfigEntry) -> bool:
     try:
         client.async_start(hass)
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except (Exception, asyncio.CancelledError):
+    except Exception, asyncio.CancelledError:
         await client.async_stop(hass)
         raise
     return True

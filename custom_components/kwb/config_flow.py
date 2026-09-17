@@ -11,9 +11,18 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .client import validate_connection
 from .const import (
+    CONF_BOILER_EFFICIENCY,
     CONF_NOMINAL_POWER,
+    CONF_PELLET_BULK_DENSITY,
+    CONF_PELLET_ENERGY,
+    CONF_PELLET_PRICE,
     CONF_RAW,
+    DEFAULT_BOILER_EFFICIENCY,
     DEFAULT_NAME,
+    DEFAULT_NOMINAL_POWER,
+    DEFAULT_PELLET_BULK_DENSITY,
+    DEFAULT_PELLET_ENERGY,
+    DEFAULT_PELLET_PRICE,
     DEFAULT_PORT,
     DEFAULT_RAW,
     DOMAIN,
@@ -29,7 +38,23 @@ USER_SCHEMA = vol.Schema(
                 options=["serial", "tcp"], translation_key="connection_type"
             )
         ),
-        vol.Optional(CONF_NOMINAL_POWER): vol.All(
+        vol.Required(CONF_NOMINAL_POWER, default=DEFAULT_NOMINAL_POWER): vol.All(
+            vol.Coerce(float),
+            vol.Range(min=0, min_included=False, max=sys.float_info.max),
+        ),
+        vol.Required(
+            CONF_PELLET_BULK_DENSITY, default=DEFAULT_PELLET_BULK_DENSITY
+        ): vol.All(
+            vol.Coerce(float),
+            vol.Range(min=0, min_included=False, max=sys.float_info.max),
+        ),
+        vol.Required(
+            CONF_BOILER_EFFICIENCY, default=DEFAULT_BOILER_EFFICIENCY
+        ): vol.All(vol.Coerce(float), vol.Range(min=0, min_included=False, max=100)),
+        vol.Required(CONF_PELLET_PRICE, default=DEFAULT_PELLET_PRICE): vol.All(
+            vol.Coerce(float), vol.Range(min=0, max=sys.float_info.max)
+        ),
+        vol.Required(CONF_PELLET_ENERGY, default=DEFAULT_PELLET_ENERGY): vol.All(
             vol.Coerce(float),
             vol.Range(min=0, min_included=False, max=sys.float_info.max),
         ),

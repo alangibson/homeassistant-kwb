@@ -4,16 +4,24 @@
     "step": {
       "user": {
         "title": "KWB-Heizung einrichten",
-        "description": "Wähle einen Namen und die Verbindungsart für deine KWB-Heizung. Du kannst außerdem die Nennleistung angeben, um die aktuelle Wärmeleistung zu berechnen.",
+        "description": "Wähle einen Namen und die Verbindungsart für deine KWB-Heizung. Gib die Nennleistung an, um die Wärmeleistung und den Pelletverbrauch zu schätzen. Passe die Pelletdaten und den Wirkungsgrad bei Bedarf an.",
         "data": {
           "name": "Name der Heizung",
           "type": "Verbindungsart",
-          "nominal_power": "Nennleistung der Heizung (kW)"
+          "nominal_power": "Nennleistung der Heizung (kW)",
+          "pellet_bulk_density": "Pellet-Schüttdichte (kg/L)",
+          "boiler_efficiency": "Kesselwirkungsgrad (%)",
+          "pellet_energy": "Energiegehalt der Pellets (kWh/kg)",
+          "pellet_price": "Pelletpreis (pro Tonne)"
         },
         "data_description": {
           "name": "Wird für das Gerät und seine Sensornamen verwendet, zum Beispiel Kellerheizung.",
           "type": "Wähle Seriell für ein direkt mit dem Home-Assistant-Host verbundenes Gerät oder TCP für einen Seriell-Ethernet-Server.",
-          "nominal_power": "Optional. Gib die thermische Nennleistung vom Typenschild der Heizung in kW an (größer als 0), zum Beispiel 25. Lass das Feld leer, wenn die Nennleistung unbekannt ist."
+          "nominal_power": "Thermische Nennleistung laut Typenschild in kW. Standard: 25 kW. Muss größer als 0 sein. Nach der Einrichtung am Gerät änderbar.",
+          "pellet_bulk_density": "Masse eines Liters loser Pellets einschließlich der Zwischenräume. Standard: 0,65 kg/L. Muss größer als 0 sein. Wird zur Umrechnung des geschätzten Verbrauchs von kg/h in L/h verwendet. Nach der Einrichtung am Gerät änderbar.",
+          "boiler_efficiency": "Kesselwirkungsgrad in Prozent. Standard: 95 %. Gib 95 für 95 % ein, nicht 0,95. Muss größer als 0 und höchstens 100 sein. Wird zusammen mit Nennleistung und Energiegehalt der Pellets zur Verbrauchsschätzung verwendet. Nach der Einrichtung am Gerät änderbar.",
+          "pellet_energy": "Energiegehalt laut Pelletlieferant in kWh/kg. Standard: 4,8 kWh/kg. Muss größer als 0 sein. Verwende dieselbe Heizwert- oder Brennwertbasis wie beim Kesselwirkungsgrad. Wird zusammen mit Nennleistung und Wirkungsgrad zur Verbrauchsschätzung verwendet. Nach der Einrichtung am Gerät änderbar.",
+          "pellet_price": "Preis für 1 Tonne (1.000 kg) Pellets in der in Home Assistant eingestellten Währung. Standard: 0. Muss mindestens 0 sein. Nach der Einrichtung am Gerät änderbar. Preisänderungen berechnen die Kosten für den gesamten erfassten Verbrauch neu."
         }
       },
       "serial": {
@@ -56,6 +64,25 @@
       "options": {
         "serial": "Seriell",
         "tcp": "TCP"
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "nominal_power": {
+        "name": "Nennleistung der Heizung"
+      },
+      "boiler_efficiency": {
+        "name": "Kesselwirkungsgrad"
+      },
+      "pellet_bulk_density": {
+        "name": "Pellet-Schüttdichte"
+      },
+      "pellet_energy": {
+        "name": "Energiegehalt der Pellets"
+      },
+      "pellet_price": {
+        "name": "Pelletpreis"
       }
     }
   }
