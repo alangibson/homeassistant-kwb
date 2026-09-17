@@ -2,17 +2,16 @@
   "domain": "kwb",
   "name": "KWB Easyfire",
   "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/kwb",
+  "documentation": "https://github.com/alangibson/pykwb",
   "iot_class": "local_polling",
   "loggers": [
     "pykwb"
   ],
-  "quality_scale": "legacy",
   "requirements": [
-    "pykwb==0.0.21"
+    "git+https://github.com/alangibson/pykwb.git@improvements#pykwb==0.0.21"
   ],
   "config_flow": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "dependencies": [
     "integration"
   ]
