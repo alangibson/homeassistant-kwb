@@ -17,6 +17,8 @@ The setup dialog is opened through **Add integration**; installing files through
 
 With a nominal rating configured and a pykwb version that exposes **Heater Output**, **Heater Power Output** reports `nominal_power × (heater_output / 100)` in kW. For example, a 25 kW heater at 40% output reports 10 kW. It follows the source reading’s availability. The entity ID follows the usual naming convention: `sensor.{name}_heater_power_output`.
 
+**Heater Energy Output** accumulates **Heater Power Output** into kWh using Home Assistant's built-in [Integral sensor](https://www.home-assistant.io/integrations/integration/). It uses the left Riemann sum (the last reported power applies until the next reading) and updates at least once per minute while power is available, even when power is constant. The accumulated total is restored after a Home Assistant restart; unavailable periods are not counted. For example, 12 kW for 30 minutes adds 6 kWh. Both sensors are created when nominal power is configured and the heater output reading is supported. The energy entity ID normally follows `sensor.{name}_heater_energy_output`.
+
 ## Listener
 
 The integration uses a shared async task that repeatedly calls pykwb’s

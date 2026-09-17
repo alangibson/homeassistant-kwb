@@ -12,5 +12,8 @@
     "pykwb==0.0.21"
   ],
   "config_flow": true,
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "dependencies": [
+    "integration"
+  ]
 }

@@ -1,8 +1,11 @@
 """Support for KWB Easyfire."""
 
+from datetime import timedelta
 from typing import override
 
 import voluptuous as vol
+from homeassistant.components.integration.const import METHOD_LEFT
+from homeassistant.components.integration.sensor import IntegrationSensor
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
 )
@@ -25,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from pykwb import kwb
@@ -124,13 +128,29 @@ async def async_setup_entry(
     )
 
     if nominal_power is not None:
-        async_add_entities(
-            KWBPowerOutputSensor(
+        for sensor in client.get_sensors():
+            if sensor.name != "Heater Output":
+                continue
+            power = KWBPowerOutputSensor(
                 client, sensor, entry.data[CONF_NAME], entry.entry_id, nominal_power
             )
-            for sensor in client.get_sensors()
-            if sensor.name == "Heater Output"
-        )
+            # Resolve the registered ID, including user renames and name collisions,
+            # before the energy sensor starts listening for power state changes.
+            source = er.async_get(hass).async_get_or_create(
+                Platform.SENSOR,
+                DOMAIN,
+                f"{entry.entry_id}_Heater Power Output",
+                suggested_object_id=power.name,
+                config_entry=entry,
+            )
+            async_add_entities(
+                [
+                    power,
+                    KWBEnergyOutputSensor(
+                        power, source.entity_id, entry.entry_id, entry.data[CONF_NAME]
+                    ),
+                ]
+            )
 
 
 class KWBSensor(KWBEntity, SensorEntity):
@@ -190,3 +210,26 @@ class KWBPowerOutputSensor(KWBEntity, SensorEntity):
         if self._sensor.available and self._sensor.value is not None:
             return self._nominal_power * (self._sensor.value / 100)
         return None
+
+
+class KWBEnergyOutputSensor(IntegrationSensor):
+    """Accumulate heater power using Home Assistant's restorable integral sensor."""
+
+    def __init__(
+        self,
+        power: KWBPowerOutputSensor,
+        source_entity: str,
+        entry_id: str,
+        client_name: str,
+    ) -> None:
+        super().__init__(
+            integration_method=METHOD_LEFT,
+            name=f"{client_name} Heater Energy Output",
+            round_digits=3,
+            source_entity=source_entity,
+            unique_id=f"{entry_id}_Heater Energy Output",
+            unit_prefix=None,  # The source already reports kW.
+            unit_time=UnitOfTime.HOURS,
+            max_sub_interval=timedelta(minutes=1),
+        )
+        self._attr_device_info = power.device_info
