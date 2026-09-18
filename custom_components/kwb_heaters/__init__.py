@@ -1,4 +1,4 @@
-"""KWB Easyfire integration."""
+"""KWB Heaters integration."""
 
 import asyncio
 

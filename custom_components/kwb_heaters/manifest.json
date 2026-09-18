@@ -1,6 +1,6 @@
 {
-  "domain": "kwb",
-  "name": "KWB Easyfire",
+  "domain": "kwb_heaters",
+  "name": "KWB Heaters",
   "codeowners": [],
   "documentation": "https://github.com/alangibson/pykwb",
   "iot_class": "local_polling",

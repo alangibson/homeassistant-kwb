@@ -13,13 +13,13 @@ class KWBEntity(Entity):
 
     def __init__(
         self,
-        easyfire: kwb.KWBEasyfire,
+        heater: kwb.KWBEasyfire,
         sensor: kwb.KWBEasyfireSensor,
         client_name: str,
         entry_id: str | None = None,
     ) -> None:
         """Initialize the KWB sensor."""
-        self._easyfire = easyfire
+        self._heater = heater
         self._sensor = sensor
         self._client_name = client_name
         self._name = self._sensor.name
@@ -28,8 +28,7 @@ class KWBEntity(Entity):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, entry_id)},
                 name=client_name,
-                manufacturer="KWB",
-                model="Easyfire",
+                manufacturer="KWB"
             )
 
     @property

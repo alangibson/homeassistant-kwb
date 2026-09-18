@@ -1,4 +1,4 @@
-"""Support for KWB Easyfire."""
+"""Support for KWB Heaters"""
 
 from datetime import timedelta
 from decimal import Decimal
@@ -107,17 +107,17 @@ async def async_setup_platform(
     """Set up the KWB component."""
     raw = config.get(CONF_RAW)
     client_name = config.get(CONF_NAME, DEFAULT_NAME)
-    easyfire = await hass.async_add_executor_job(create_client, config)
-    easyfire.async_start(hass)
+    heater = await hass.async_add_executor_job(create_client, config)
+    heater.async_start(hass)
 
     async def async_stop(event: Event) -> None:
-        await easyfire.async_stop(hass)
+        await heater.async_stop(hass)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
 
     add_entities(
-        KWBSensor(easyfire, sensor, client_name)
-        for sensor in easyfire.get_sensors()
+        KWBSensor(heater, sensor, client_name)
+        for sensor in heater.get_sensors()
         if sensor.sensor_type != kwb.PROP_SENSOR_FLAG
         and (sensor.sensor_type != kwb.PROP_SENSOR_RAW or raw)
     )
@@ -126,7 +126,7 @@ async def async_setup_platform(
         hass,
         Platform.BINARY_SENSOR,
         DOMAIN,
-        {"client": easyfire, CONF_NAME: client_name},
+        {"client": heater, CONF_NAME: client_name},
         config,
     )
 
@@ -250,7 +250,7 @@ async def async_setup_entry(
 
 
 class KWBSensor(KWBEntity, SensorEntity):
-    """Representation of a KWB Easyfire numeric or raw sensor."""
+    """Representation of a KWB Heater numeric or raw sensor."""
 
     @property
     @override
@@ -288,13 +288,13 @@ class KWBPowerOutputSensor(KWBEntity, SensorEntity):
 
     def __init__(
         self,
-        easyfire: kwb.KWBEasyfire,
+        heater: kwb.KWBEasyfire,
         sensor: kwb.KWBEasyfireSensor,
         client_name: str,
         entry_id: str,
         nominal_power: float,
     ) -> None:
-        super().__init__(easyfire, sensor, client_name, entry_id)
+        super().__init__(heater, sensor, client_name, entry_id)
         self._name = "Heater Power Output"
         self._attr_unique_id = f"{entry_id}_Heater Power Output"
         self._nominal_power = nominal_power
@@ -317,7 +317,7 @@ class KWBPelletConsumptionRateSensor(KWBPowerOutputSensor):
 
     def __init__(
         self,
-        easyfire: kwb.KWBEasyfire,
+        heater: kwb.KWBEasyfire,
         sensor: kwb.KWBEasyfireSensor,
         client_name: str,
         entry_id: str,
@@ -325,7 +325,7 @@ class KWBPelletConsumptionRateSensor(KWBPowerOutputSensor):
         efficiency: float,
         pellet_energy: float,
     ) -> None:
-        super().__init__(easyfire, sensor, client_name, entry_id, nominal_power)
+        super().__init__(heater, sensor, client_name, entry_id, nominal_power)
         self._name = "Pellet Consumption Rate"
         self._attr_unique_id = f"{entry_id}_Pellet Consumption Rate"
         self._efficiency = efficiency
@@ -361,14 +361,14 @@ class KWBPelletVolumeFlowRateSensor(KWBEntity, SensorEntity):
 
     def __init__(
         self,
-        easyfire: kwb.KWBEasyfire,
+        heater: kwb.KWBEasyfire,
         sensor: kwb.KWBEasyfireSensor,
         client_name: str,
         entry_id: str,
         consumption: KWBPelletConsumptionRateSensor,
         bulk_density: float,
     ) -> None:
-        super().__init__(easyfire, sensor, client_name, entry_id)
+        super().__init__(heater, sensor, client_name, entry_id)
         self._name = "Pellet Volume Flow Rate"
         self._attr_unique_id = f"{entry_id}_Pellet Volume Flow Rate"
         self._consumption = consumption

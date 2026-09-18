@@ -1,6 +1,6 @@
 """Constants for the KWB integration."""
 
-DOMAIN = "kwb"
+DOMAIN = "kwb_heaters"
 DEFAULT_NAME = "KWB"
 DEFAULT_PORT = 23
 DEFAULT_RAW = False

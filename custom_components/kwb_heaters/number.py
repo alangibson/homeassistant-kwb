@@ -105,8 +105,7 @@ class KWBPropertyNumber(NumberEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.data[CONF_NAME],
-            manufacturer="KWB",
-            model="Easyfire",
+            manufacturer="KWB"
         )
 
     @property

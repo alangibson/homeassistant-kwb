@@ -1,4 +1,4 @@
-"""Support for KWB Easyfire flags."""
+"""Support for KWB Heater flags."""
 
 from typing import override
 
@@ -45,7 +45,7 @@ async def async_setup_entry(
 
 
 class KWBBinarySensor(KWBEntity, BinarySensorEntity):
-    """Representation of a KWB Easyfire flag."""
+    """Representation of a KWB Heater flag."""
 
     @property
     @override

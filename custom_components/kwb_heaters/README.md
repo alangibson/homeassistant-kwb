@@ -1,10 +1,10 @@
-# KWB Easyfire
+# KWB Heaters
 
 Initially copied from the [official Home Assistant integration](https://github.com/home-assistant/core/tree/dev/homeassistant/components/kwb).
 
 ## GUI setup
 
-After installing the custom integration, restart Home Assistant. Open **Settings → Devices & services → Add integration → KWB Easyfire**.
+After installing the custom integration, restart Home Assistant. Open **Settings → Devices & services → Add integration → KWB Heaters**.
 
 1. Enter a heater name and select **Serial** or **TCP**. Enter the heater's positive **Nominal heater power (kW)** rating (default: **25 kW**). Set **Pellet Bulk Density (kg/L)** to the mass of one liter of loose pellets, including the spaces between pellets (default: **0.65 kg/L**, must be positive).
 2. For serial, enter the device path (for example, `/dev/ttyUSB0`, or preferably a persistent `/dev/serial/by-id/` path).
@@ -105,8 +105,8 @@ From the repository root, with the development dependencies and the local pykwb 
 
 ```sh
 PYTHONPATH=../pykwb python -m unittest discover -s tests -v
-python -m ruff check custom_components/kwb tests/test_kwb.py
-python -m mypy custom_components/kwb
+python -m ruff check custom_components/kwb_heaters tests/test_kwb.py
+python -m mypy custom_components/kwb_heaters
 ```
 
 ## Pellet consumption cost
