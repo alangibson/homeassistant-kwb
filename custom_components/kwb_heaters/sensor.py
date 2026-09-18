@@ -2,8 +2,9 @@
 
 from datetime import timedelta
 from decimal import Decimal
+from inspect import signature
 from math import isfinite
-from typing import override
+from typing import Any, override
 
 import voluptuous as vol
 from homeassistant.components.integration.const import METHOD_LEFT
@@ -171,7 +172,11 @@ async def async_setup_entry(
                 [
                     power,
                     KWBEnergyOutputSensor(
-                        power, source.entity_id, entry.entry_id, entry.data[CONF_NAME]
+                        power,
+                        source.entity_id,
+                        entry.entry_id,
+                        entry.data[CONF_NAME],
+                        hass=hass,
                     ),
                 ]
             )
@@ -207,6 +212,7 @@ async def async_setup_entry(
                     consumption_source.entity_id,
                     entry.entry_id,
                     entry.data[CONF_NAME],
+                    hass=hass,
                 )
                 total_source = er.async_get(hass).async_get_or_create(
                     Platform.SENSOR,
@@ -390,6 +396,16 @@ class KWBResettableIntegrationSensor(IntegrationSensor):
     _entry_id: str
     _reset_target_key: str
 
+    def __init__(
+        self, *, hass: HomeAssistant | None = None, **kwargs: Any
+    ) -> None:
+        """Pass hass only to HA versions whose integral constructor requires it."""
+        if "hass" in signature(IntegrationSensor.__init__).parameters:
+            if hass is None:
+                raise TypeError("This Home Assistant version requires hass")
+            kwargs["hass"] = hass
+        super().__init__(**kwargs)
+
     @override
     async def async_added_to_hass(self) -> None:
         """Restore the reset marker and register the target for the reset button."""
@@ -459,8 +475,11 @@ class KWBPelletConsumptionSensor(KWBResettableIntegrationSensor):
         source_entity: str,
         entry_id: str,
         client_name: str,
+        *,
+        hass: HomeAssistant | None = None,
     ) -> None:
         super().__init__(
+            hass=hass,
             integration_method=METHOD_LEFT,
             name=f"{client_name} Pellet Consumption",
             round_digits=6,
@@ -504,8 +523,11 @@ class KWBEnergyOutputSensor(KWBResettableIntegrationSensor):
         source_entity: str,
         entry_id: str,
         client_name: str,
+        *,
+        hass: HomeAssistant | None = None,
     ) -> None:
         super().__init__(
+            hass=hass,
             integration_method=METHOD_LEFT,
             name=f"{client_name} Heater Energy Output",
             round_digits=3,
