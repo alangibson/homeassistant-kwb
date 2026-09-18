@@ -22,7 +22,7 @@ class KWBClient(kwb.KWBEasyfire):
         """Let pykwb manage reads, connection failures, and retries."""
         try:
             await self.listen_forever()
-        except OSError, EOFError:
+        except (OSError, EOFError):
             _LOGGER.exception("KWB connection closed while reading")
         finally:
             for sensor in self.get_sensors():

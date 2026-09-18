@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KWBConfigEntry) -> bool:
     try:
         client.async_start(hass)
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except Exception, asyncio.CancelledError:
+    except (Exception, asyncio.CancelledError):
         await client.async_stop(hass)
         raise
     return True
