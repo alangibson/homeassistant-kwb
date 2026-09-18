@@ -1,0 +1,24 @@
+services:
+  homeassistant:
+    container_name: homeassistant-kwb
+    image: "ghcr.io/home-assistant/home-assistant:2026.9.2"
+    volumes:
+      - ./custom_components/kwb_heaters:/config/custom_components/kwb_heaters:ro
+      - ./custom_components/kwb:/config/custom_components/kwb:ro
+      # Local development only: remove this pykwb mount before release.
+      - /home/alangibson/dev/home-automation/pykwb:/workspaces/pykwb
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    # Local development only: remove this entrypoint and command block before release.
+    # Install the local pykwb checkout and prevent HA from replacing it.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        python -m uv pip install --system -e /workspaces/pykwb &&
+        exec python -m homeassistant \
+          --config /config \
+          --skip-pip-packages pykwb
+    ports:
+      - 8143:8123
+    restart: unless-stopped
+    privileged: true

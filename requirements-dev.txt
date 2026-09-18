@@ -1,0 +1,4 @@
+homeassistant==2026.9.2
+mypy==2.3.1
+ruff==0.16.7
+types-pyserial==3.5.0.20260712

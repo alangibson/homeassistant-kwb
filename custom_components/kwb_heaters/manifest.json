@@ -1,13 +1,18 @@
 {
   "domain": "kwb_heaters",
   "name": "KWB Heaters",
-  "version": "0.0.1",
-  "codeowners": ["alangibson"],
-  "documentation": "",
+  "codeowners": [],
+  "documentation": "https://github.com/alangibson/pykwb",
   "iot_class": "local_polling",
-  "loggers": ["pykwb"],
-  "requirements": [
-    "git+https://github.com/alangibson/pykwb.git@more-registers#pykwb==0.1.4"
+  "loggers": [
+    "pykwb"
   ],
-  "config_flow": true
+  "requirements": [
+    "git+https://github.com/alangibson/pykwb.git@improvements#pykwb==0.0.21"
+  ],
+  "config_flow": true,
+  "version": "0.2.0",
+  "dependencies": [
+    "integration"
+  ]
 }

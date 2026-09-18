@@ -1,0 +1,110 @@
+{
+  "title": "KWB Heaters",
+  "config": {
+    "step": {
+      "user": {
+        "title": "KWB-Heizung einrichten",
+        "description": "Wähle einen Namen, das Heizungsmodell, die Steuerung und die Verbindungsart.",
+        "data": {
+          "name": "Name der Heizung",
+          "heater_model": "Heizungsmodell",
+          "controller": "Steuerung",
+          "type": "Verbindungsart"
+        },
+        "data_description": {
+          "name": "Wird für das Gerät und seine Sensornamen verwendet, zum Beispiel Kellerheizung.",
+          "type": "Wähle Seriell für ein direkt mit dem Home-Assistant-Host verbundenes Gerät oder TCP für einen Seriell-Ethernet-Server."
+        }
+      },
+      "serial": {
+        "title": "Serielle Verbindung",
+        "description": "Gib den Pfad des seriellen Geräts an, unter dem Home Assistant darauf zugreifen kann.",
+        "data": {
+          "device": "Pfad des seriellen Geräts",
+          "raw": "Sensoren für Rohdatenpakete hinzufügen"
+        },
+        "data_description": {
+          "device": "Zum Beispiel /dev/ttyUSB0. Verwende möglichst einen dauerhaften Pfad unter /dev/serial/by-id/, damit die Verbindung nach einem Neustart erhalten bleibt.",
+          "raw": "Zeigt Sensoren für Rohdatenpakete zur Fehlerdiagnose an. Im normalen Betrieb deaktiviert lassen."
+        }
+      },
+      "tcp": {
+        "title": "TCP-Verbindung",
+        "description": "Gib die Netzwerkadresse und den TCP-Port des Seriell-Ethernet-Servers an, der mit deiner Heizung verbunden ist.",
+        "data": {
+          "host": "Hostname oder IP-Adresse",
+          "port": "TCP-Port",
+          "raw": "Sensoren für Rohdatenpakete hinzufügen"
+        },
+        "data_description": {
+          "host": "Zum Beispiel 192.168.1.50 oder boiler.local. Gib nur den Hostnamen oder die IP-Adresse an, ohne URL-Schema oder Port.",
+          "port": "Der TCP-Port des seriellen Servers (1–65535). Der Standardwert ist 23. Verwende den auf deinem Server eingestellten Port.",
+          "raw": "Zeigt Sensoren für Rohdatenpakete zur Fehlerdiagnose an. Im normalen Betrieb deaktiviert lassen."
+        }
+      },
+      "properties": {
+        "title": "Heizungs- und Pelleteigenschaften",
+        "description": "Gib die Nennleistung deiner Heizung an und passe die Pelleteigenschaften und den Wirkungsgrad an deine Anlage an.",
+        "data": {
+          "nominal_power": "Nennleistung der Heizung (kW)",
+          "pellet_bulk_density": "Pellet-Schüttdichte (kg/L)",
+          "boiler_efficiency": "Kesselwirkungsgrad (%)",
+          "pellet_energy": "Energiegehalt der Pellets (kWh/kg)",
+          "pellet_price": "Pelletpreis (pro Tonne)"
+        },
+        "data_description": {
+          "nominal_power": "Thermische Nennleistung laut Typenschild in kW. Standard: 25 kW. Muss größer als 0 sein.",
+          "pellet_bulk_density": "Masse eines Liters loser Pellets einschließlich der Zwischenräume. Standard: 0,65 kg/L. Muss größer als 0 sein. Wird zur Umrechnung des geschätzten Verbrauchs von kg/h in L/h verwendet.",
+          "boiler_efficiency": "Kesselwirkungsgrad in Prozent. Standard: 95 %. Gib 95 für 95 % ein, nicht 0,95. Muss größer als 0 und höchstens 100 sein. Wird zusammen mit Nennleistung und Energiegehalt der Pellets zur Verbrauchsschätzung verwendet.",
+          "pellet_energy": "Energiegehalt laut Pelletlieferant in kWh/kg. Standard: 4,8 kWh/kg. Muss größer als 0 sein. Verwende dieselbe Heizwert- oder Brennwertbasis wie beim Kesselwirkungsgrad. Wird zusammen mit Nennleistung und Wirkungsgrad zur Verbrauchsschätzung verwendet.",
+          "pellet_price": "Preis für 1 Tonne (1.000 kg) Pellets in der in Home Assistant eingestellten Währung. Standard: 0. Muss mindestens 0 sein. Preisänderungen berechnen die Kosten für den gesamten erfassten Verbrauch neu."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung nicht möglich. Prüfe bei seriellen Verbindungen den Gerätepfad und die Zugriffsrechte von Home Assistant. Prüfe bei TCP den Hostnamen, den Port und die Netzwerkverbindung."
+    },
+    "abort": {
+      "already_configured": "Diese Heizungsverbindung ist bereits eingerichtet.",
+      "already_in_progress": "Diese Heizungsverbindung wird bereits eingerichtet."
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "serial": "Seriell",
+        "tcp": "TCP"
+      }
+    },
+    "heater_model": {
+      "options": {
+        "easyfire_1": "Easyfire 1",
+        "easyfire_2": "Easyfire 2"
+      }
+    },
+    "controller": {
+      "options": {
+        "comfort_3": "Comfort 3"
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "nominal_power": {
+        "name": "Nennleistung der Heizung"
+      },
+      "boiler_efficiency": {
+        "name": "Kesselwirkungsgrad"
+      },
+      "pellet_bulk_density": {
+        "name": "Pellet-Schüttdichte"
+      },
+      "pellet_energy": {
+        "name": "Energiegehalt der Pellets"
+      },
+      "pellet_price": {
+        "name": "Pelletpreis"
+      }
+    }
+  }
+}

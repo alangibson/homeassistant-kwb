@@ -1,46 +1,56 @@
-import logging
+"""Support for KWB Heater flags."""
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, CONF_UNIQUE_ID
+from typing import override
+
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from pykwb import kwb
 
-from .const import DOMAIN, MANUFACTURER
-from .src.impl.config.binary_sensor.entities import setup_entities
+from . import KWBConfigEntry
+from .entity import KWBEntity
 
-logger = logging.getLogger(__name__)
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Add flags using the connection opened by the legacy sensor platform."""
+    if discovery_info is None:
+        return
+    client = discovery_info["client"]
+    add_entities(
+        KWBBinarySensor(client, sensor, discovery_info[CONF_NAME])
+        for sensor in client.get_sensors()
+        if sensor.sensor_type == kwb.PROP_SENSOR_FLAG
+    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: KWBConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Initialize config entry."""
-
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id].get(
-        "coordinator"
-    )
-
-    unique_device_id = config_entry.data.get(CONF_UNIQUE_ID)
-    model = config_entry.data.get(CONF_MODEL)
-
-    # TODO this is repeated in sensor.py
-    # Create a device info object
-    device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, unique_device_id)},
-        "manufacturer": MANUFACTURER,
-        "name": f"{MANUFACTURER} {model}",
-        "model": model,
-    }
-
+    """Add flags for a UI-configured heater."""
+    client = entry.runtime_data
     async_add_entities(
-        setup_entities(
-            coordinator=coordinator, config_entry=config_entry, device_info=device_info
-        ),
-        update_before_add=True,
+        KWBBinarySensor(client, sensor, entry.data[CONF_NAME], entry.entry_id)
+        for sensor in client.get_sensors()
+        if sensor.sensor_type == kwb.PROP_SENSOR_FLAG
     )
+
+
+class KWBBinarySensor(KWBEntity, BinarySensorEntity):
+    """Representation of a KWB Heater flag."""
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return the flag state, or unknown before a value is available."""
+        if self._sensor.value is None or not self._sensor.available:
+            return None
+        return bool(self._sensor.value)
