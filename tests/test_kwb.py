@@ -13,16 +13,22 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from pykwb import kwb
 
-from custom_components.kwb import async_setup_entry, async_unload_entry
-from custom_components.kwb.binary_sensor import KWBBinarySensor
-from custom_components.kwb.binary_sensor import (
+from custom_components.kwb_heaters import async_setup_entry, async_unload_entry
+from custom_components.kwb_heaters.binary_sensor import KWBBinarySensor
+from custom_components.kwb_heaters.binary_sensor import (
     async_setup_entry as setup_binary_sensors,
 )
-from custom_components.kwb.binary_sensor import setup_platform as setup_binary_platform
-from custom_components.kwb.client import KWBClient, create_client, validate_connection
-from custom_components.kwb.config_flow import KWBConfigFlow, vol
-from custom_components.kwb.sensor import PLATFORM_SCHEMA, async_setup_platform
-from custom_components.kwb.sensor import async_setup_entry as setup_sensors
+from custom_components.kwb_heaters.binary_sensor import (
+    setup_platform as setup_binary_platform,
+)
+from custom_components.kwb_heaters.client import (
+    KWBClient,
+    create_client,
+    validate_connection,
+)
+from custom_components.kwb_heaters.config_flow import KWBConfigFlow, vol
+from custom_components.kwb_heaters.sensor import PLATFORM_SCHEMA, async_setup_platform
+from custom_components.kwb_heaters.sensor import async_setup_entry as setup_sensors
 
 
 class FlowTests(unittest.IsolatedAsyncioTestCase):
@@ -37,7 +43,7 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         )
         self.flow._async_in_progress = MagicMock(return_value=[])
         self.flow.context = {"source": "user"}
-        self.flow.handler = "kwb"
+        self.flow.handler = "kwb_heaters"
         self.flow.flow_id = "test-flow"
 
     async def start(self, connection):
@@ -55,14 +61,20 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(form["step_id"], connection)
                 data = form["data_schema"](inputs)
                 with patch(
-                    "custom_components.kwb.config_flow.validate_connection"
+                    "custom_components.kwb_heaters.config_flow.validate_connection"
                 ) as check:
                     result = await getattr(self.flow, f"async_step_{connection}")(data)
+                self.assertEqual(result["step_id"], "properties")
+                self.assertTrue(result["last_step"])
+                result = await self.flow.async_step_properties(result["data_schema"]({}))
                 self.assertEqual(result["type"], FlowResultType.CREATE_ENTRY)
                 self.assertEqual(result["title"], "Basement heater")
                 self.assertFalse(result["data"]["raw"])
                 self.assertEqual(self.flow.unique_id, expected_id)
-                check.assert_called_once_with(result["data"])
+                check.assert_called_once()
+                self.assertEqual(check.call_args.args[0]["type"], connection)
+                self.assertEqual(result["data"]["heater_model"], "easyfire_1")
+                self.assertEqual(result["data"]["controller"], "comfort_3")
 
     async def test_connection_failure_and_retry(self):
         for connection, inputs in (
@@ -74,13 +86,16 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
                 data = form["data_schema"](inputs)
                 step = getattr(self.flow, f"async_step_{connection}")
                 with patch(
-                    "custom_components.kwb.config_flow.validate_connection",
+                    "custom_components.kwb_heaters.config_flow.validate_connection",
                     side_effect=OSError,
                 ):
                     result = await step(data)
                 self.assertEqual(result["errors"], {"base": "cannot_connect"})
-                with patch("custom_components.kwb.config_flow.validate_connection"):
+                with patch("custom_components.kwb_heaters.config_flow.validate_connection"):
                     result = await step(data)
+                self.assertEqual(result["step_id"], "properties")
+                self.assertTrue(result["last_step"])
+                result = await self.flow.async_step_properties(result["data_schema"]({}))
                 self.assertEqual(result["type"], FlowResultType.CREATE_ENTRY)
 
     async def test_duplicate(self):
@@ -88,7 +103,7 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         self.flow.hass.config_entries.async_entry_for_domain_unique_id.return_value = (
             SimpleNamespace(source="user")
         )
-        with patch("custom_components.kwb.config_flow.validate_connection") as check:
+        with patch("custom_components.kwb_heaters.config_flow.validate_connection") as check:
             with self.assertRaises(AbortFlow) as raised:
                 await self.flow.async_step_tcp(
                     form["data_schema"]({"host": "boiler.local"})
@@ -97,18 +112,40 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         check.assert_not_called()
 
     async def test_nominal_power_saved(self):
-        form = await self.flow.async_step_user()
+        form = await self.start("tcp")
+        with patch("custom_components.kwb_heaters.config_flow.validate_connection"):
+            form = await self.flow.async_step_tcp(
+                form["data_schema"]({"host": "boiler"})
+            )
         for power in (0, -1, "invalid", float("inf"), float("nan")):
             with self.subTest(power=power), self.assertRaises(vol.Invalid):
                 form["data_schema"]({"nominal_power": power})
-        form = await self.flow.async_step_user(
+        result = await self.flow.async_step_properties(
             form["data_schema"]({"nominal_power": 25.5})
         )
-        with patch("custom_components.kwb.config_flow.validate_connection"):
-            result = await self.flow.async_step_tcp(
-                form["data_schema"]({"host": "boiler"})
-            )
         self.assertEqual(result["data"]["nominal_power"], 25.5)
+
+    async def test_heater_selection(self):
+        form = await self.flow.async_step_user()
+        schema = form["data_schema"]
+        self.assertEqual(
+            [key.schema for key in schema.schema],
+            ["name", "heater_model", "controller", "type"],
+        )
+        self.assertFalse(form["last_step"])
+        for field in ("heater_model", "controller", "type"):
+            self.assertEqual(schema.schema[field].config["mode"], "dropdown")
+            with self.assertRaises(vol.Invalid):
+                schema({field: "unsupported"})
+        for model in ("easyfire_1", "easyfire_2"):
+            form = await self.flow.async_step_user(schema({"heater_model": model}))
+            with patch("custom_components.kwb_heaters.config_flow.validate_connection"):
+                form = await self.flow.async_step_tcp(
+                    form["data_schema"]({"host": "boiler"})
+                )
+            result = await self.flow.async_step_properties(form["data_schema"]({}))
+            self.assertEqual(result["data"]["heater_model"], model)
+            self.assertEqual(result["data"]["controller"], "comfort_3")
 
     async def test_input_validation(self):
         form = await self.flow.async_step_user()
@@ -141,7 +178,7 @@ class EntryTests(unittest.IsolatedAsyncioTestCase):
     async def test_setup_stop_unload(self):
         client = MagicMock()
         client.async_stop = AsyncMock()
-        with patch("custom_components.kwb.create_client", return_value=client):
+        with patch("custom_components.kwb_heaters.create_client", return_value=client):
             self.assertTrue(await async_setup_entry(self.hass, self.entry))
         client.async_start.assert_called_once_with(self.hass)
         self.hass.config_entries.async_forward_entry_setups.assert_awaited_once_with(
@@ -155,7 +192,7 @@ class EntryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(client.async_stop.await_count, 2)
 
     async def test_setup_failure_retries(self):
-        with patch("custom_components.kwb.create_client", side_effect=OSError):
+        with patch("custom_components.kwb_heaters.create_client", side_effect=OSError):
             with self.assertRaises(ConfigEntryNotReady):
                 await async_setup_entry(self.hass, self.entry)
 
@@ -163,7 +200,7 @@ class EntryTests(unittest.IsolatedAsyncioTestCase):
         client = MagicMock()
         client.async_stop = AsyncMock()
         self.hass.config_entries.async_forward_entry_setups.side_effect = RuntimeError
-        with patch("custom_components.kwb.create_client", return_value=client):
+        with patch("custom_components.kwb_heaters.create_client", return_value=client):
             with self.assertRaises(RuntimeError):
                 await async_setup_entry(self.hass, self.entry)
         client.async_stop.assert_awaited_once_with(self.hass)
@@ -227,7 +264,7 @@ class EntryTests(unittest.IsolatedAsyncioTestCase):
             self.entry.runtime_data.get_sensors.return_value = sources
             self.entry.data["nominal_power"] = 25.5
             sensors = []
-            with patch("custom_components.kwb.sensor.er.async_get") as get_registry:
+            with patch("custom_components.kwb_heaters.sensor.er.async_get") as get_registry:
                 registry = get_registry.return_value
                 registry.async_get_or_create.return_value.entity_id = (
                     "sensor.renamed_power"
@@ -302,12 +339,12 @@ class EntryTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(flag.available, available)
 
         config = PLATFORM_SCHEMA(
-            {"platform": "kwb", "type": "tcp", "host": "boiler", "port": 23}
+            {"platform": "kwb_heaters", "type": "tcp", "host": "boiler", "port": 23}
         )
         sensors = []
         with (
-            patch("custom_components.kwb.sensor.create_client", return_value=client),
-            patch("custom_components.kwb.sensor.discovery.async_load_platform") as load,
+            patch("custom_components.kwb_heaters.sensor.create_client", return_value=client),
+            patch("custom_components.kwb_heaters.sensor.discovery.async_load_platform") as load,
         ):
             await async_setup_platform(self.hass, config, sensors.extend)
         self.assertEqual(len(sensors), 2)
@@ -356,20 +393,22 @@ class ClientTests(unittest.TestCase):
 
     def test_yaml_still_supported(self):
         for data in (
-            {"platform": "kwb", "type": "serial", "device": "/dev/ttyUSB0"},
-            {"platform": "kwb", "type": "tcp", "host": "boiler", "port": 23},
+            {"platform": "kwb_heaters", "type": "serial", "device": "/dev/ttyUSB0"},
+            {"platform": "kwb_heaters", "type": "tcp", "host": "boiler", "port": 23},
         ):
             config = PLATFORM_SCHEMA(data)
             self.assertFalse(config["raw"])
             self.assertEqual(config["name"], "KWB")
 
     def test_translations(self):
-        root = Path(__file__).resolve().parents[1] / "custom_components/kwb"
+        root = Path(__file__).resolve().parents[1] / "custom_components/kwb_heaters"
         strings = json.loads((root / "strings.json").read_text())
         self.assertEqual(
             strings, json.loads((root / "translations/en.json").read_text())
         )
-        self.assertEqual(set(strings["config"]["step"]), {"user", "serial", "tcp"})
+        self.assertEqual(
+            set(strings["config"]["step"]), {"user", "serial", "tcp", "properties"}
+        )
         self.assertEqual(
             set(strings["selector"]["connection_type"]["options"]), {"serial", "tcp"}
         )

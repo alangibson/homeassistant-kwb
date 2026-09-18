@@ -6,17 +6,17 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant.exceptions import HomeAssistantError
 
-from custom_components.kwb.config_flow import USER_SCHEMA
-from custom_components.kwb.const import PROPERTY_DEFAULTS
-from custom_components.kwb.number import DESCRIPTIONS, KWBPropertyNumber
-from custom_components.kwb.number import async_setup_entry as setup_numbers
-from custom_components.kwb.sensor import async_setup_entry as setup_sensors
+from custom_components.kwb_heaters.config_flow import PROPERTIES_SCHEMA
+from custom_components.kwb_heaters.const import PROPERTY_DEFAULTS
+from custom_components.kwb_heaters.number import DESCRIPTIONS, KWBPropertyNumber
+from custom_components.kwb_heaters.number import async_setup_entry as setup_numbers
+from custom_components.kwb_heaters.sensor import async_setup_entry as setup_sensors
 
 
 class NumberTests(unittest.IsolatedAsyncioTestCase):
     async def test_defaults_and_updates(self):
         for _ in range(2):  # New setup, including after deleting and re-adding.
-            config = USER_SCHEMA({})
+            config = PROPERTIES_SCHEMA({})
             for key, default in PROPERTY_DEFAULTS.items():
                 self.assertEqual(config[key], default)
         source = SimpleNamespace(
@@ -43,8 +43,8 @@ class NumberTests(unittest.IsolatedAsyncioTestCase):
         hass.config_entries.async_update_entry.side_effect = save
         sensors = []
         with (
-            patch("custom_components.kwb.sensor.er.async_get"),
-            patch("custom_components.kwb.sensor.async_dispatcher_connect") as connect,
+            patch("custom_components.kwb_heaters.sensor.er.async_get"),
+            patch("custom_components.kwb_heaters.sensor.async_dispatcher_connect") as connect,
         ):
             await setup_sensors(hass, entry, sensors.extend)
         on_change = connect.call_args.args[2]
@@ -53,7 +53,7 @@ class NumberTests(unittest.IsolatedAsyncioTestCase):
         power, _, mass, volume, consumption, cost = sensors[1:]
         self.assertEqual(consumption.native_value, 0)
         numbers = []
-        with patch("custom_components.kwb.number.er.async_get") as registry:
+        with patch("custom_components.kwb_heaters.number.er.async_get") as registry:
             registry.return_value.async_get_entity_id.side_effect = [
                 None,
                 "sensor.old_power",
@@ -75,7 +75,7 @@ class NumberTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(number.available)
             self.assertEqual(number.entity_category, "config")
             with patch(
-                "custom_components.kwb.number.async_dispatcher_send",
+                "custom_components.kwb_heaters.number.async_dispatcher_send",
                 side_effect=lambda *args: on_change(),
             ):
                 await number.async_set_native_value(value)
@@ -98,7 +98,7 @@ class NumberTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HomeAssistantError):
             await numbers[1].async_set_native_value(101)
         # A replacement entry has its own defaults, not the previous options.
-        fresh = SimpleNamespace(entry_id="new-heater", data=USER_SCHEMA({}), options={})
+        fresh = SimpleNamespace(entry_id="new-heater", data=PROPERTIES_SCHEMA({}), options={})
         for description in DESCRIPTIONS:
             self.assertEqual(
                 KWBPropertyNumber(fresh, description).native_value,

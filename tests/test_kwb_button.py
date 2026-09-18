@@ -11,8 +11,8 @@ from homeassistant.core import State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
-from custom_components.kwb.button import async_setup_entry
-from custom_components.kwb.sensor import (
+from custom_components.kwb_heaters.button import async_setup_entry
+from custom_components.kwb_heaters.sensor import (
     KWBEnergyOutputSensor,
     KWBPelletConsumptionSensor,
 )
@@ -39,7 +39,7 @@ class ResetTests(unittest.IsolatedAsyncioTestCase):
         other = MagicMock()
         button.hass = MagicMock()
         button.hass.data = {
-            "kwb": {"energy_reset_targets": {"heater": energy, "other": other}}
+            "kwb_heaters": {"energy_reset_targets": {"heater": energy, "other": other}}
         }
         await button.async_press()
         energy.async_reset.assert_called_once_with()
@@ -67,7 +67,7 @@ class ResetTests(unittest.IsolatedAsyncioTestCase):
 
     async def check_reset(self, sensor_class, unit, state_class, target_key):
         power = MagicMock()
-        power.device_info = {"identifiers": {("kwb", "heater")}}
+        power.device_info = {"identifiers": {("kwb_heaters", "heater")}}
         energy = sensor_class(power, "sensor.power", "heater", "Basement")
         energy.hass = MagicMock()
         energy.hass.data = {}
@@ -90,7 +90,7 @@ class ResetTests(unittest.IsolatedAsyncioTestCase):
         energy.hass.states.get.return_value = state(12, 1800)
         with (
             patch(
-                "custom_components.kwb.sensor.dt_util.utcnow", return_value=reset_time
+                "custom_components.kwb_heaters.sensor.dt_util.utcnow", return_value=reset_time
             ),
             patch("homeassistant.components.integration.sensor.async_call_later"),
         ):
@@ -141,7 +141,7 @@ class ResetTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(
                 restored.last_reset, reset_time if state_class == "total" else None
             )
-            self.assertIs(restored.hass.data["kwb"][target_key]["heater"], restored)
+            self.assertIs(restored.hass.data["kwb_heaters"][target_key]["heater"], restored)
             restored._last_integration_time = start + timedelta(seconds=1860)
             schedule.call_args.args[2](start + timedelta(seconds=1920))
             self.assertEqual(restored.native_value, Decimal("0.2"))
@@ -175,7 +175,7 @@ class ResetTests(unittest.IsolatedAsyncioTestCase):
         pellet, energy, other = MagicMock(), MagicMock(), MagicMock()
         button.hass = MagicMock()
         button.hass.data = {
-            "kwb": {
+            "kwb_heaters": {
                 "pellet_reset_targets": {"heater": pellet, "other": other},
                 "energy_reset_targets": {"heater": energy},
             }
@@ -184,6 +184,6 @@ class ResetTests(unittest.IsolatedAsyncioTestCase):
         pellet.async_reset.assert_called_once_with()
         energy.async_reset.assert_not_called()
         other.async_reset.assert_not_called()
-        del button.hass.data["kwb"]["pellet_reset_targets"]["heater"]
+        del button.hass.data["kwb_heaters"]["pellet_reset_targets"]["heater"]
         with self.assertRaises(HomeAssistantError):
             await button.async_press()

@@ -8,7 +8,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor.const import DEVICE_CLASS_UNITS
 from pykwb import kwb
 
-from custom_components.kwb.sensor import KWBSensor
+from custom_components.kwb_heaters.sensor import KWBSensor
 
 
 class SensorMetadataTests(unittest.TestCase):
@@ -52,10 +52,10 @@ class EnergyOutputTests(unittest.IsolatedAsyncioTestCase):
         from homeassistant.core import State
         from homeassistant.util import dt as dt_util
 
-        from custom_components.kwb.sensor import KWBEnergyOutputSensor
+        from custom_components.kwb_heaters.sensor import KWBEnergyOutputSensor
 
         power = MagicMock()
-        power.device_info = {"identifiers": {("kwb", "heater")}}
+        power.device_info = {"identifiers": {("kwb_heaters", "heater")}}
         energy = KWBEnergyOutputSensor(power, "sensor.boiler_power", "heater", "Boiler")
         energy.hass = MagicMock()
         energy.async_write_ha_state = MagicMock()
@@ -133,10 +133,10 @@ class PelletConsumptionTests(unittest.IsolatedAsyncioTestCase):
         from homeassistant.core import State
         from homeassistant.util import dt as dt_util
 
-        from custom_components.kwb.sensor import KWBPelletConsumptionSensor
+        from custom_components.kwb_heaters.sensor import KWBPelletConsumptionSensor
 
         power = MagicMock()
-        power.device_info = {"identifiers": {("kwb", "heater")}}
+        power.device_info = {"identifiers": {("kwb_heaters", "heater")}}
         energy = KWBPelletConsumptionSensor(power, "sensor.boiler_pellet_rate", "heater", "Boiler")
         energy.hass = MagicMock()
         energy.async_write_ha_state = MagicMock()
@@ -225,7 +225,7 @@ class PelletRateTests(unittest.IsolatedAsyncioTestCase):
     async def test_setup_calculations_and_availability(self):
         from unittest.mock import patch
 
-        from custom_components.kwb.sensor import async_setup_entry
+        from custom_components.kwb_heaters.sensor import async_setup_entry
 
         source = SimpleNamespace(
             name="Heater Output",
@@ -249,7 +249,7 @@ class PelletRateTests(unittest.IsolatedAsyncioTestCase):
             },
         )
         sensors = []
-        with patch("custom_components.kwb.sensor.er.async_get") as registry:
+        with patch("custom_components.kwb_heaters.sensor.er.async_get") as registry:
             registry.return_value.async_get_or_create.side_effect = [
                 SimpleNamespace(entity_id="sensor.power"),
                 SimpleNamespace(entity_id="sensor.renamed_pellet_rate"),
@@ -292,14 +292,14 @@ class PelletRateTests(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(volume.native_value, 15 / (0.9 * 4.8) / 0.65)
         entry.data["pellet_bulk_density"] = 0.7
         sensors = []
-        with patch("custom_components.kwb.sensor.er.async_get"):
+        with patch("custom_components.kwb_heaters.sensor.er.async_get"):
             await async_setup_entry(MagicMock(), entry, sensors.extend)
         self.assertAlmostEqual(sensors[4].native_value, 15 / (0.9 * 4.8) / 0.7)
         for missing in ("nominal_power", "boiler_efficiency", "pellet_energy"):
             config = dict(entry.data)
             del entry.data[missing]
             sensors = []
-            with patch("custom_components.kwb.sensor.er.async_get"):
+            with patch("custom_components.kwb_heaters.sensor.er.async_get"):
                 await async_setup_entry(MagicMock(), entry, sensors.extend)
             self.assertFalse(
                 any("_Pellet " in (sensor.unique_id or "") for sensor in sensors)
@@ -311,27 +311,31 @@ class PelletRateTests(unittest.IsolatedAsyncioTestCase):
 
         import voluptuous as vol
 
-        from custom_components.kwb.config_flow import USER_SCHEMA, KWBConfigFlow
+        from custom_components.kwb_heaters.config_flow import (
+            PROPERTIES_SCHEMA,
+            USER_SCHEMA,
+            KWBConfigFlow,
+        )
 
-        self.assertEqual(USER_SCHEMA({})["pellet_bulk_density"], 0.65)
+        self.assertEqual(PROPERTIES_SCHEMA({})["pellet_bulk_density"], 0.65)
         for field in ("pellet_bulk_density", "boiler_efficiency", "pellet_energy"):
             for invalid in (0, -1, float("inf"), float("nan"), "invalid"):
                 with (
                     self.subTest(field=field, invalid=invalid),
                     self.assertRaises(vol.Invalid),
                 ):
-                    USER_SCHEMA({field: invalid})
+                    PROPERTIES_SCHEMA({field: invalid})
         with self.assertRaises(vol.Invalid):
-            USER_SCHEMA({"boiler_efficiency": 101})
+            PROPERTIES_SCHEMA({"boiler_efficiency": 101})
         flow = KWBConfigFlow()
         flow.hass = MagicMock()
         flow.hass.async_add_executor_job = AsyncMock()
         flow.hass.config_entries.async_entry_for_domain_unique_id.return_value = None
         flow._async_in_progress = MagicMock(return_value=[])
         flow.context = {"source": "user"}
-        flow.handler = "kwb"
+        flow.handler = "kwb_heaters"
         flow.flow_id = "pellet-test"
-        config = USER_SCHEMA(
+        config = PROPERTIES_SCHEMA(
             {
                 "nominal_power": 25,
                 "boiler_efficiency": 90,
@@ -339,8 +343,10 @@ class PelletRateTests(unittest.IsolatedAsyncioTestCase):
                 "pellet_bulk_density": 0.7,
             }
         )
-        form = await flow.async_step_user(config)
-        with patch("custom_components.kwb.config_flow.validate_connection"):
+        form = await flow.async_step_user(USER_SCHEMA({}))
+        with patch("custom_components.kwb_heaters.config_flow.validate_connection"):
             result = await flow.async_step_tcp(form["data_schema"]({"host": "boiler"}))
+        self.assertEqual(result["step_id"], "properties")
+        result = await flow.async_step_properties(config)
         for key, value in config.items():
             self.assertEqual(result["data"][key], value)
