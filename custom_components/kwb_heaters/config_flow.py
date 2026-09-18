@@ -7,11 +7,17 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .client import validate_connection
 from .const import (
     CONF_BOILER_EFFICIENCY,
+    CONF_CONTROLLER,
+    CONF_HEATER_MODEL,
     CONF_NOMINAL_POWER,
     CONF_PELLET_BULK_DENSITY,
     CONF_PELLET_ENERGY,
@@ -33,11 +39,32 @@ USER_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME, default=DEFAULT_NAME): vol.All(
             str, vol.Strip, vol.Length(min=1)
         ),
-        vol.Required(CONF_TYPE, default="tcp"): SelectSelector(
+        vol.Required(CONF_HEATER_MODEL, default="easyfire_1"): SelectSelector(
             SelectSelectorConfig(
-                options=["serial", "tcp"], translation_key="connection_type"
+                options=["easyfire_1", "easyfire_2"],
+                translation_key="heater_model",
+                mode=SelectSelectorMode.DROPDOWN,
             )
         ),
+        vol.Required(CONF_CONTROLLER, default="comfort_3"): SelectSelector(
+            SelectSelectorConfig(
+                options=["comfort_3"],
+                translation_key="controller",
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Required(CONF_TYPE, default="tcp"): SelectSelector(
+            SelectSelectorConfig(
+                options=["serial", "tcp"],
+                translation_key="connection_type",
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+    }
+)
+
+PROPERTIES_SCHEMA = vol.Schema(
+    {
         vol.Required(CONF_NOMINAL_POWER, default=DEFAULT_NOMINAL_POWER): vol.All(
             vol.Coerce(float),
             vol.Range(min=0, min_included=False, max=sys.float_info.max),
@@ -73,13 +100,15 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose a heater name and connection type."""
+        """Choose the heater details and connection type."""
         if user_input is not None:
             self._config = dict(user_input)
             if user_input[CONF_TYPE] == "serial":
                 return await self.async_step_serial()
             return await self.async_step_tcp()
-        return self.async_show_form(step_id="user", data_schema=USER_SCHEMA)
+        return self.async_show_form(
+            step_id="user", data_schema=USER_SCHEMA, last_step=False
+        )
 
     async def async_step_serial(
         self, user_input: dict[str, Any] | None = None
@@ -136,9 +165,25 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
             except OSError:
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_create_entry(title=config[CONF_NAME], data=config)
+                self._config = config
+                return await self.async_step_properties()
         return self.async_show_form(
             step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(schema, user_input),
             errors=errors,
+            last_step=False,
+        )
+
+    async def async_step_properties(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure the values used to estimate heat and pellet consumption."""
+        if user_input is not None:
+            self._abort_if_unique_id_configured()
+            self._config.update(user_input)
+            return self.async_create_entry(
+                title=self._config[CONF_NAME], data=self._config
+            )
+        return self.async_show_form(
+            step_id="properties", data_schema=PROPERTIES_SCHEMA, last_step=True
         )

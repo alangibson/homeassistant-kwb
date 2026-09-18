@@ -4,24 +4,16 @@
     "step": {
       "user": {
         "title": "Set up a KWB heater",
-        "description": "Choose a name and connection type for your KWB heater. Enter its nominal power to estimate heat output and pellet consumption. Adjust the pellet properties and efficiency to match your installation.",
+        "description": "Choose a name, heater model, controller, and connection type.",
         "data": {
           "name": "Heater name",
-          "type": "Connection type",
-          "nominal_power": "Nominal heater power (kW)",
-          "pellet_bulk_density": "Pellet bulk density (kg/L)",
-          "boiler_efficiency": "Boiler efficiency (%)",
-          "pellet_energy": "Pellet energy density (kWh/kg)",
-          "pellet_price": "Pellet price (per metric ton)"
+          "heater_model": "Heater model",
+          "controller": "Controller",
+          "type": "Connection type"
         },
         "data_description": {
           "name": "Used for the device and its sensor names, for example, Basement heater.",
-          "type": "Choose Serial for a device connected directly to the Home Assistant host, or TCP for a serial-to-Ethernet server.",
-          "nominal_power": "Rated thermal output from the heater nameplate in kW. Default: 25 kW. Must be greater than 0. Editable on the device after setup.",
-          "pellet_bulk_density": "Mass of one liter of loose pellets, including the spaces between pellets. Default: 0.65 kg/L. Must be greater than 0. Converts estimated consumption from kg/h to L/h. Editable on the device after setup.",
-          "boiler_efficiency": "Boiler efficiency as a percentage. Default: 95%. Enter 95 for 95%, not 0.95. Must be greater than 0 and at most 100. Used with nominal power and pellet energy density to estimate consumption. Editable on the device after setup.",
-          "pellet_energy": "Energy content from your pellet supplier in kWh/kg. Default: 4.8 kWh/kg. Must be greater than 0. Use the same lower or higher heating-value basis as the boiler efficiency. Used with nominal power and efficiency to estimate consumption. Editable on the device after setup.",
-          "pellet_price": "Price of 1 metric ton (1,000 kg) of pellets in your Home Assistant currency. Default: 0. Must be zero or greater. Editable on the device after setup. Changing the price recalculates the cost of the entire recorded consumption total."
+          "type": "Choose Serial for a device connected directly to the Home Assistant host, or TCP for a serial-to-Ethernet server."
         }
       },
       "serial": {
@@ -49,6 +41,24 @@
           "port": "The serial server’s TCP listening port (1–65535). The default is 23; use the port configured on your server.",
           "raw": "Expose raw packet sensors for troubleshooting. Leave this disabled for normal use."
         }
+      },
+      "properties": {
+        "title": "Heater and pellet properties",
+        "description": "Enter the nominal heater power and adjust the pellet properties and efficiency to match your installation.",
+        "data": {
+          "nominal_power": "Nominal heater power (kW)",
+          "pellet_bulk_density": "Pellet bulk density (kg/L)",
+          "boiler_efficiency": "Boiler efficiency (%)",
+          "pellet_energy": "Pellet energy density (kWh/kg)",
+          "pellet_price": "Pellet price (per metric ton)"
+        },
+        "data_description": {
+          "nominal_power": "Rated thermal output from the heater nameplate in kW. Default: 25 kW. Must be greater than 0.",
+          "pellet_bulk_density": "Mass of one liter of loose pellets, including the spaces between pellets. Default: 0.65 kg/L. Must be greater than 0. Converts estimated consumption from kg/h to L/h.",
+          "boiler_efficiency": "Boiler efficiency as a percentage. Default: 95%. Enter 95 for 95%, not 0.95. Must be greater than 0 and at most 100. Used with nominal power and pellet energy density to estimate consumption.",
+          "pellet_energy": "Energy content from your pellet supplier in kWh/kg. Default: 4.8 kWh/kg. Must be greater than 0. Use the same lower or higher heating-value basis as the boiler efficiency. Used with nominal power and efficiency to estimate consumption.",
+          "pellet_price": "Price of 1 metric ton (1,000 kg) of pellets in your Home Assistant currency. Default: 0. Must be zero or greater. Changing the price recalculates the cost of the entire recorded consumption total."
+        }
       }
     },
     "error": {
@@ -64,6 +74,17 @@
       "options": {
         "serial": "Serial",
         "tcp": "TCP"
+      }
+    },
+    "heater_model": {
+      "options": {
+        "easyfire_1": "Easyfire 1",
+        "easyfire_2": "Easyfire 2"
+      }
+    },
+    "controller": {
+      "options": {
+        "comfort_3": "Comfort 3"
       }
     }
   },
