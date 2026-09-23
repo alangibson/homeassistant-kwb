@@ -39,6 +39,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -56,6 +57,7 @@ from .const import (
     CONF_RAW,
     DEFAULT_NAME,
     DEFAULT_PELLET_BULK_DENSITY,
+    DEFAULT_PELLET_ENERGY,
     DEFAULT_PELLET_PRICE,
     DEFAULT_RAW,
     DOMAIN,
@@ -253,6 +255,8 @@ async def async_setup_entry(
                 )
             )
             break
+
+    async_add_entities([KWBPelletEnergyPriceSensor(entry, hass.config.currency)])
 
 
 class KWBSensor(KWBEntity, SensorEntity):
@@ -593,6 +597,55 @@ class KWBPelletConsumptionCostSensor(SensorEntity):
                 self.hass, self._source_entity, update_from_source
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._entry.entry_id}_properties",
+                self.async_write_ha_state,
+            )
+        )
+
+
+class KWBPelletEnergyPriceSensor(SensorEntity):
+    """Price per kWh of pellet fuel energy, before boiler efficiency losses."""
+
+    _attr_should_poll = False
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 4
+
+    def __init__(self, entry: KWBConfigEntry, currency: str) -> None:
+        self._entry = entry
+        self._attr_name = f"{entry.data[CONF_NAME]} Pellet Energy Price"
+        self._attr_unique_id = f"{entry.entry_id}_Pellet Energy Price"
+        self._attr_native_unit_of_measurement = f"{currency}/kWh"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.data[CONF_NAME],
+            manufacturer="KWB",
+        )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        config = {**self._entry.data, **self._entry.options}
+        try:
+            price = float(config.get(CONF_PELLET_PRICE, DEFAULT_PELLET_PRICE))
+            energy = float(config.get(CONF_PELLET_ENERGY, DEFAULT_PELLET_ENERGY))
+        except (TypeError, ValueError):
+            return None
+        if not isfinite(price) or price < 0 or not isfinite(energy) or energy <= 0:
+            return None
+        value = price / 1000 / energy
+        return value if isfinite(value) else None
+
+    @property
+    @override
+    def available(self) -> bool:
+        return self.native_value is not None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
