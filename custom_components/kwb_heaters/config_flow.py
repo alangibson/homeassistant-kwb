@@ -3,6 +3,8 @@
 import sys
 from typing import Any
 
+import logging
+
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
@@ -13,7 +15,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .client import validate_connection
+from .client import NoSensorsError, validate_connection
 from .const import (
     CONF_BOILER_EFFICIENCY,
     CONF_CONTROLLER,
@@ -33,6 +35,8 @@ from .const import (
     DEFAULT_RAW,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema(
     {
@@ -161,9 +165,18 @@ class KWBConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
             try:
-                await self.hass.async_add_executor_job(validate_connection, config)
+                await validate_connection(config)
+            except TimeoutError:
+                errors["base"] = "connection_timeout"
+            except EOFError:
+                errors["base"] = "connection_closed"
+            except NoSensorsError:
+                errors["base"] = "no_sensors"
             except OSError:
                 errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error validating KWB connection")
+                errors["base"] = "unknown"
             else:
                 self._config = config
                 return await self.async_step_properties()

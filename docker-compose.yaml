@@ -4,9 +4,8 @@ services:
     image: "ghcr.io/home-assistant/home-assistant:2026.9.2"
     volumes:
       - ./custom_components/kwb_heaters:/config/custom_components/kwb_heaters:ro
-      - ./custom_components/kwb:/config/custom_components/kwb:ro
       # Local development only: remove this pykwb mount before release.
-      - /home/alangibson/dev/home-automation/pykwb:/workspaces/pykwb
+      - /home/alangibson/dev/home-automation/pykwb:/workspaces/pykwbcomfort
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
     # Local development only: remove this entrypoint and command block before release.
@@ -14,7 +13,7 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        python -m uv pip install --system -e /workspaces/pykwb &&
+        python -m uv pip install --system -e /workspaces/pykwbcomfort &&
         exec python -m homeassistant \
           --config /config \
           --skip-pip-packages pykwb

@@ -261,7 +261,7 @@ class PelletRateTests(unittest.IsolatedAsyncioTestCase):
             "sensor.renamed_pellet_rate",
         )
         mass, volume = sensors[3:5]
-        self.assertEqual(len(sensors), 7)
+        self.assertEqual(len(sensors), 8)
         self.assertAlmostEqual(mass.native_value, 15 / (0.9 * 4.8))
         self.assertAlmostEqual(volume.native_value, 15 / (0.9 * 4.8) / 0.65)
         self.assertEqual(mass.native_unit_of_measurement, "kg/h")
@@ -302,7 +302,11 @@ class PelletRateTests(unittest.IsolatedAsyncioTestCase):
             with patch("custom_components.kwb_heaters.sensor.er.async_get"):
                 await async_setup_entry(MagicMock(), entry, sensors.extend)
             self.assertFalse(
-                any("_Pellet " in (sensor.unique_id or "") for sensor in sensors)
+                any(
+                    "_Pellet " in (sensor.unique_id or "")
+                    and not sensor.unique_id.endswith("_Pellet Energy Price")
+                    for sensor in sensors
+                )
             )
             entry.data = config
 

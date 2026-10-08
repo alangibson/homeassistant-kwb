@@ -50,7 +50,7 @@ class NumberTests(unittest.IsolatedAsyncioTestCase):
         on_change = connect.call_args.args[2]
         for sensor in sensors:
             sensor.async_write_ha_state = MagicMock()
-        power, _, mass, volume, consumption, cost = sensors[1:]
+        power, _, mass, volume, consumption, cost = sensors[1:-1]
         self.assertEqual(consumption.native_value, 0)
         numbers = []
         with patch("custom_components.kwb_heaters.number.er.async_get") as registry:

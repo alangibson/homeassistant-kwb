@@ -11,6 +11,11 @@ from homeassistant.core import HomeAssistant
 from pykwb import kwb
 
 _LOGGER = logging.getLogger(__name__)
+PROBE_SECONDS = 10
+
+
+class NoSensorsError(Exception):
+    """The library returned no sensors after listening."""
 
 
 class KWBClient(kwb.KWBEasyfire):
@@ -27,7 +32,7 @@ class KWBClient(kwb.KWBEasyfire):
         finally:
             for sensor in self.get_sensors():
                 sensor.value = None
-            await hass.async_add_executor_job(self._close_connection)
+            await self.close()
 
     def async_start(self, hass: HomeAssistant) -> None:
         """Start a single listener without a pykwb reader thread."""
@@ -36,30 +41,37 @@ class KWBClient(kwb.KWBEasyfire):
         )
 
     async def async_stop(self, hass: HomeAssistant) -> None:
-        """Cancel reads before closing the transport in the executor."""
+        """Cancel reads before asynchronously closing the transport."""
         if self._listener_task is not None:
             self._listener_task.cancel()
             with suppress(asyncio.CancelledError):
                 await self._listener_task
             self._listener_task = None
         # Also handles a task cancelled before its coroutine first ran.
-        await hass.async_add_executor_job(self._close_connection)
+        await self.close()
 
 
 def create_client(config: Mapping[str, Any], *, reconnect: bool = True) -> KWBClient:
-    """Open the configured connection (must run in an executor)."""
+    """Create the lazy transport and load sensor definitions in an executor."""
     if config[CONF_TYPE] == "serial":
-        return KWBClient(kwb.PROP_MODE_SERIAL, _serial_device=config[CONF_DEVICE])
-    return KWBClient(
-        kwb.PROP_MODE_TCP,
-        config[CONF_HOST],
-        config[CONF_PORT],
-        _config={"connection": {"reconnect": reconnect}},
-    )
+        client = KWBClient(kwb.PROP_MODE_SERIAL, _serial_device=config[CONF_DEVICE])
+    else:
+        client = KWBClient(
+            kwb.PROP_MODE_TCP,
+            config[CONF_HOST],
+            config[CONF_PORT],
+            _config={"connection": {"reconnect": reconnect}},
+        )
+    client.load_sensors()
+    return client
 
 
-def validate_connection(config: Mapping[str, Any]) -> None:
-    """Check that the transport can be opened, without starting a reader."""
-    # A failed setup probe must raise instead of waiting for background retries.
-    client = create_client(config, reconnect=False)
-    client._close_connection()
+async def validate_connection(config: Mapping[str, Any]) -> None:
+    """Listen briefly and require a non-empty sensor list."""
+    client = await asyncio.to_thread(create_client, config, reconnect=False)
+    try:
+        await client.listen_for(PROBE_SECONDS)
+        if not client.get_sensors():
+            raise NoSensorsError
+    finally:
+        await client.close()

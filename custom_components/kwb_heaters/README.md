@@ -11,7 +11,7 @@ After installing the custom integration, restart Home Assistant. Open **Settings
 3. For TCP, enter the serial server's host and port (default: `23`).
 4. Leave **Include raw packet sensors** unchecked for normal operation, then submit.
 
-Setup checks whether the connection can be opened. It does not verify that the connected device is a KWB controller. Decoded sensors become available as pykwb receives packets. The heater name is used for the device, integration entry, and sensor names. Configuring the same endpoint again is prevented.
+Setup listens for up to 10 seconds and succeeds if no error is raised and pykwb returns a non-empty sensor list. Sensor definitions alone do not verify that the connected device is a KWB controller. Decoded sensors become available as pykwb receives packets. The heater name is used for the device, integration entry, and sensor names. Configuring the same endpoint again is prevented.
 
 The setup dialog is opened through **Add integration**; installing files through HACS does not automatically open it. Existing YAML sensor configurations remain supported. Remove a heater's YAML configuration and restart before adding that same heater through the GUI to avoid duplicate connections.
 
@@ -85,15 +85,15 @@ same heating-value basis. Missing properties in older entries are initialized wi
 The integration runs pykwb’s `listen_forever()` in a shared Home Assistant
 background task. pykwb owns connection creation, cleanup, and TCP reconnection.
 TCP reconnection is enabled for normal operation, using pykwb’s defaults:
-a 5-second connection timeout, a 30-second valid-packet timeout, and exponential
-retry delays from 1 to 30 seconds. pykwb marks readings unavailable on connection
-loss and resumes updates after reconnecting. The config-flow connection probe
-disables retries so a failed connection is reported to the user.
+a 5-second connection timeout and exponential retry delays from 1 to 30 seconds.
+The config-flow probe calls `listen_for(10)` with retries disabled, checks that
+`get_sensors()` is non-empty, and always awaits `close()`. Setup reports distinct
+errors for connection failures, timeouts, EOF, missing sensors, and unexpected failures.
 
-Connection creation runs in Home Assistant’s executor. Unload and shutdown cancel
-the listener and ask pykwb to close the connection. This requires the local
-pykwb development version with async reconnection support; the pinned release
-does not provide this API.
+Sensor definitions load in Home Assistant’s executor before entities are created.
+Connections open lazily on the event loop. Unload and shutdown cancel the listener
+and await pykwb’s `close()`. This requires the local pykwb development API with
+async inputs and explicit `load_sensors()` support.
 
 ## Translations
 

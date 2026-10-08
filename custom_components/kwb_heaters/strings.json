@@ -62,7 +62,11 @@
       }
     },
     "error": {
-      "cannot_connect": "Unable to connect. For serial, check the device path and Home Assistant’s access to the device. For TCP, check the host, port, and network connection."
+      "cannot_connect": "Unable to connect. For serial, check the device path and Home Assistant’s access to the device. For TCP, check the host, port, and network connection.",
+      "connection_timeout": "The connection timed out. Check the host, port, or serial device and try again.",
+      "connection_closed": "The connection closed while listening. Check the serial-to-Ethernet server or serial device and try again.",
+      "no_sensors": "The KWB library returned no sensors after listening. Check the installed pykwb version and its sensor definitions.",
+      "unknown": "An unexpected error occurred while checking the heater. See the Home Assistant logs for details."
     },
     "abort": {
       "already_configured": "This heater connection is already configured.",

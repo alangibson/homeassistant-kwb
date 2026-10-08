@@ -8,7 +8,7 @@
     "pykwb"
   ],
   "requirements": [
-    "git+https://github.com/alangibson/pykwb.git@improvements#pykwb==0.0.21"
+    "git+https://github.com/alangibson/pykwb.git@improvements#pykwb==0.1.11"
   ],
   "config_flow": true,
   "version": "0.2.0",

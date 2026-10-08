@@ -12,6 +12,8 @@ from custom_components.kwb_heaters.number import DESCRIPTIONS, KWBPropertyNumber
 from custom_components.kwb_heaters.sensor import (
     KWBPelletConsumptionCostSensor,
     KWBPelletConsumptionSensor,
+    KWBPelletEnergyPriceSensor,
+    async_setup_entry,
 )
 
 
@@ -85,3 +87,66 @@ class CostTests(unittest.IsolatedAsyncioTestCase):
             with patch("custom_components.kwb_heaters.number.async_dispatcher_send"):
                 await number.async_set_native_value(0)
             self.assertEqual(cost.native_value, 0)
+
+
+class EnergyPriceTests(unittest.IsolatedAsyncioTestCase):
+    async def test_price_and_energy_updates(self):
+        entry = SimpleNamespace(
+            entry_id="heater",
+            data={"name": "Basement", "pellet_price": 400, "pellet_energy": 4.8},
+            options={},
+        )
+        sensor = KWBPelletEnergyPriceSensor(entry, "EUR")
+        self.assertAlmostEqual(sensor.native_value, 0.0833333333)
+        self.assertEqual(sensor.native_unit_of_measurement, "€/kWh")
+        self.assertEqual(sensor.icon, "mdi:currency-eur")
+        self.assertEqual(sensor.unique_id, "heater_Pellet Energy Price")
+        self.assertEqual(sensor.device_info["identifiers"], {("kwb_heaters", "heater")})
+        self.assertEqual(sensor.state_class, "measurement")
+        self.assertIsNone(sensor.device_class)
+        sensor.hass = MagicMock()
+        sensor.async_write_ha_state = MagicMock()
+        with (
+            patch.object(Entity, "async_added_to_hass", new_callable=AsyncMock),
+            patch("custom_components.kwb_heaters.sensor.async_dispatcher_connect") as connect,
+        ):
+            await sensor.async_added_to_hass()
+            self.assertEqual(connect.call_args.args[1], "kwb_heaters_heater_properties")
+            for key, value, expected in (
+                ("pellet_price", 480, 0.1),
+                ("pellet_energy", 5, 0.096),
+                ("boiler_efficiency", 80, 0.096),
+                ("pellet_price", 0, 0),
+            ):
+                entry.options[key] = value
+                connect.call_args.args[2]()
+                self.assertAlmostEqual(sensor.native_value, expected)
+                self.assertTrue(sensor.available)
+            self.assertEqual(sensor.async_write_ha_state.call_count, 4)
+
+    async def test_defaults_invalid_values_and_setup_without_telemetry(self):
+        entry = SimpleNamespace(
+            entry_id="heater", data={"name": "Basement"}, options={},
+            runtime_data=MagicMock(),
+        )
+        entry.runtime_data.get_sensors.return_value = []
+        hass = MagicMock()
+        hass.config.currency = "EUR"
+        sensors = []
+        await async_setup_entry(hass, entry, sensors.extend)
+        self.assertEqual(len(sensors), 1)
+        sensor = sensors[0]
+        self.assertIsInstance(sensor, KWBPelletEnergyPriceSensor)
+        self.assertEqual(sensor.native_value, 0)
+        for key, values in (
+            ("pellet_price", [-1, None, "invalid", float("nan"), float("inf")]),
+            ("pellet_energy", [0, -1, None, "invalid", float("nan"), float("inf")]),
+        ):
+            for value in values:
+                with self.subTest(key=key, value=value):
+                    entry.options = {key: value}
+                    self.assertIsNone(sensor.native_value)
+                    self.assertFalse(sensor.available)
+        entry.options = {"pellet_price": 480}
+        self.assertTrue(sensor.available)
+        self.assertAlmostEqual(sensor.native_value, 0.1)
